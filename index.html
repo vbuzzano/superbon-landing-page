@@ -921,11 +921,11 @@
                 );
             }
 
-            function showBgImage() {
+            function showBgImage(overrideSrc) {
                 if (dogBusy) return;
                 dogBusy = true;
-                bgImgTag.src =
-                    BG_IMAGES[Math.floor(Math.random() * BG_IMAGES.length)];
+                bgImgTag.src = overrideSrc
+                    || BG_IMAGES[Math.floor(Math.random() * BG_IMAGES.length)];
                 bgImgEl.classList.remove("appear");
                 void bgImgEl.offsetWidth;
                 bgImgEl.classList.add("appear");
@@ -1323,6 +1323,28 @@
             // LIGHT   15% — shake + lightning
             // MEDIUM  38% — full medium (no crack)
             // HEAVY   34% — full heavy (no crack)
+            function dispatchGuest(entry) {
+                const g = entry.guest;
+                if (g.force === "none") return;
+
+                const cooldownOk = g.ignoreCooldown || (mi - lastGuestAt >= 2);
+                if (!cooldownOk) return;
+
+                let pick = g.force;
+                if (!pick) {
+                    if (Math.random() >= g.chance) return;
+                    pick = nextGuest;
+                    nextGuest = (nextGuest === 'ship') ? 'dog' : 'ship';
+                }
+
+                if (pick === 'ship') {
+                    showSpaceship();
+                } else {
+                    showBgImage(g.dogImage);
+                }
+                lastGuestAt = mi;
+            }
+
             function shouldShowImpact(entry) {
                 if (entry.forceImpact === true)  return true;
                 if (entry.forceImpact === false) return false;
@@ -1386,10 +1408,8 @@
                     const wantImpact = shouldShowImpact(entry);
                     if (wantImpact) {
                         showImpactText("medium", cr, cg, cb);
-                    } else if (mi - lastGuestAt >= 2 && Math.random() < 0.45) {
-                        if (nextGuest === 'ship') { showSpaceship(); } else { showBgImage(); }
-                        lastGuestAt = mi;
-                        nextGuest = (nextGuest === 'ship') ? 'dog' : 'ship';
+                    } else {
+                        dispatchGuest(entry);
                     }
                     return;
                 }
@@ -1405,10 +1425,8 @@
                 const wantImpactHeavy = shouldShowImpact(entry);
                 if (wantImpactHeavy) {
                     showImpactText("heavy", cr, cg, cb);
-                } else if (mi - lastGuestAt >= 2 && Math.random() < 0.45) {
-                    if (nextGuest === 'ship') { showSpaceship(); } else { showBgImage(); }
-                    lastGuestAt = mi;
-                    nextGuest = (nextGuest === 'ship') ? 'dog' : 'ship';
+                } else {
+                    dispatchGuest(entry);
                 }
             }
 
