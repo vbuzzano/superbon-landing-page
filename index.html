@@ -1,0 +1,1408 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>superbon</title>
+        <link rel="icon" type="image/png" href="sblgs.png" />
+        <style>
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            html,
+            body {
+                width: 100%;
+                height: 100%;
+                background: #000;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 2rem;
+            }
+
+            /* ── Logo wrapper (pump scale) ── */
+            #logo-wrap {
+                position: relative;
+                z-index: 63;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            #logo-wrap.pump-heavy {
+                animation: pump-heavy 0.6s cubic-bezier(0.22, 1, 0.36, 1)
+                    forwards;
+            }
+            #logo-wrap.pump-medium {
+                animation: pump-medium 0.48s cubic-bezier(0.22, 1, 0.36, 1)
+                    forwards;
+            }
+
+            @keyframes pump-heavy {
+                0% {
+                    transform: scale(1);
+                }
+                6% {
+                    transform: scale(1.16);
+                }
+                18% {
+                    transform: scale(0.89);
+                }
+                32% {
+                    transform: scale(1.07);
+                }
+                50% {
+                    transform: scale(0.97);
+                }
+                100% {
+                    transform: scale(1);
+                }
+            }
+            @keyframes pump-medium {
+                0% {
+                    transform: scale(1);
+                }
+                8% {
+                    transform: scale(1.09);
+                }
+                24% {
+                    transform: scale(0.94);
+                }
+                46% {
+                    transform: scale(1.02);
+                }
+                100% {
+                    transform: scale(1);
+                }
+            }
+
+            /* ── Logo ── */
+            #logo {
+                width: min(700px, 88vw);
+                display: block;
+                transition:
+                    opacity 0.5s ease,
+                    filter 0.5s ease;
+            }
+
+            /* ── Logo shock ── */
+            #logo.shock-light {
+                animation: shock-light 0.32s ease-out forwards;
+            }
+            #logo.shock-medium {
+                animation: shock-medium 0.44s ease-out forwards;
+            }
+            #logo.shock-heavy {
+                animation: shock-heavy 0.58s ease-out forwards;
+            }
+
+            @keyframes shock-light {
+                0% {
+                    transform: translateX(0) rotate(0deg);
+                    filter: brightness(1);
+                }
+                10% {
+                    transform: translateX(-4px) rotate(-0.4deg);
+                    filter: brightness(3) saturate(0);
+                }
+                20% {
+                    transform: translateX(4px) rotate(0.4deg);
+                    filter: brightness(0.4);
+                }
+                35% {
+                    transform: translateX(-2px) rotate(-0.2deg);
+                    filter: brightness(1.6);
+                }
+                55% {
+                    transform: translateX(1px);
+                    filter: brightness(1.1);
+                }
+                100% {
+                    transform: translateX(0) rotate(0deg);
+                    filter: brightness(1);
+                }
+            }
+            @keyframes shock-medium {
+                0% {
+                    transform: translateX(0) rotate(0deg) skewX(0);
+                    filter: brightness(1);
+                }
+                6% {
+                    transform: translateX(-12px) rotate(-2.5deg) skewX(-2deg);
+                    filter: brightness(7) saturate(0) blur(1px);
+                }
+                14% {
+                    transform: translateX(14px) rotate(3deg) skewX(1.5deg);
+                    filter: brightness(0.1);
+                }
+                24% {
+                    transform: translateX(-8px) rotate(-1.8deg);
+                    filter: brightness(4) saturate(2);
+                }
+                38% {
+                    transform: translateX(4px) rotate(0.8deg);
+                    filter: brightness(1.6);
+                }
+                58% {
+                    transform: translateX(-2px) rotate(-0.3deg);
+                    filter: brightness(1.1);
+                }
+                100% {
+                    transform: translateX(0) rotate(0deg) skewX(0);
+                    filter: brightness(1);
+                }
+            }
+            @keyframes shock-heavy {
+                0% {
+                    transform: translateX(0) rotate(0deg) skewX(0deg);
+                    filter: brightness(1);
+                    opacity: 1;
+                }
+                4% {
+                    transform: translateX(-22px) rotate(-6deg) skewX(-4deg);
+                    filter: brightness(14) saturate(0) blur(2.5px);
+                    opacity: 0.35;
+                }
+                10% {
+                    transform: translateX(24px) rotate(7deg) skewX(3deg);
+                    filter: brightness(0.04) blur(0.5px);
+                    opacity: 1;
+                }
+                17% {
+                    transform: translateX(-16px) rotate(-4.5deg) skewX(-2deg);
+                    filter: brightness(7) saturate(3.5) hue-rotate(35deg);
+                }
+                26% {
+                    transform: translateX(11px) rotate(2.8deg);
+                    filter: brightness(2.2);
+                }
+                38% {
+                    transform: translateX(-7px) rotate(-1.4deg);
+                    filter: brightness(1.5);
+                }
+                54% {
+                    transform: translateX(3px) rotate(0.5deg);
+                    filter: brightness(1.1);
+                }
+                74% {
+                    transform: translateX(-1px);
+                }
+                100% {
+                    transform: translateX(0) rotate(0deg) skewX(0deg);
+                    filter: brightness(1);
+                    opacity: 1;
+                }
+            }
+
+            /* ── Word + cursor ── */
+            .terminal {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                height: 1.3em;
+                overflow: visible;
+                font-family: "Courier New", monospace;
+                font-size: clamp(1.6rem, 5vw, 2.8rem);
+                letter-spacing: 0.2em;
+                text-transform: uppercase;
+                color: rgba(255, 255, 255, 0.82);
+            }
+            #typed {
+                display: inline;
+                white-space: nowrap;
+            }
+            .cursor {
+                display: inline-block;
+                width: clamp(9px, 1.5vw, 15px);
+                height: 0.85em;
+                background: rgba(255, 255, 255, 0.75);
+                flex-shrink: 0;
+                animation: blink 1.1s step-end infinite;
+            }
+            @keyframes blink {
+                0%,
+                100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0;
+                }
+            }
+            @keyframes fall {
+                0% {
+                    opacity: 1;
+                    transform: translateY(0);
+                    filter: blur(0px);
+                }
+                30% {
+                    opacity: 0.6;
+                    transform: translateY(40px);
+                    filter: blur(1px);
+                }
+                100% {
+                    opacity: 0;
+                    transform: translateY(130px);
+                    filter: blur(3px);
+                }
+            }
+
+            /* ── Screen flash ── */
+            #flash {
+                position: fixed;
+                inset: 0;
+                pointer-events: none;
+                z-index: 90;
+                opacity: 0;
+                background: #fff;
+            }
+            #flash.pop {
+                animation: flash-pop 0.14s ease-out forwards;
+            }
+            @keyframes flash-pop {
+                0% {
+                    opacity: 1;
+                }
+                30% {
+                    opacity: 0.7;
+                }
+                100% {
+                    opacity: 0;
+                }
+            }
+
+            /* ── Spaceship easter egg ── */
+            #ship-overlay {
+                position: fixed;
+                inset: 0;
+                pointer-events: none;
+                z-index: 61;
+                opacity: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            #ship-overlay img {
+                width: min(950px, 130vw);
+                height: auto;
+                mix-blend-mode: screen;
+                transform: translateY(-12vh);
+            }
+            @media (max-width: 768px) {
+                #ship-overlay img { transform: translateY(-5vh); }
+            }
+            #ship-overlay.appear {
+                animation: ship-in 1.75s ease-in-out forwards;
+            }
+            @keyframes ship-in {
+                0%   { opacity: 0; }
+                8%   { opacity: 0.90; }
+                55%  { opacity: 0.78; }
+                85%  { opacity: 0.55; }
+                100% { opacity: 0; }
+            }
+
+            /* ── Lightning overlay (volumetric, auto-fades) ── */
+            #lightning-overlay {
+                position: fixed;
+                inset: 0;
+                pointer-events: none;
+                z-index: 72;
+                opacity: 0;
+            }
+            #lightning-overlay.strike {
+                animation: lightning-out 0.55s ease-out forwards;
+            }
+            @keyframes lightning-out {
+                0% {
+                    opacity: 1;
+                }
+                10% {
+                    opacity: 1;
+                }
+                100% {
+                    opacity: 0;
+                }
+            }
+            /* filter set dynamically in JS per left/right */
+            #lightning-overlay svg {
+                width: 100%;
+                height: 100%;
+            }
+
+            /* ── Glass crack overlay (scar-hold fade) ── */
+            #glass-overlay {
+                position: fixed;
+                inset: 0;
+                pointer-events: none;
+                z-index: 70;
+                opacity: 0;
+            }
+            #glass-overlay.strike {
+                animation: glass-out 3.2s ease-out forwards;
+            }
+            @keyframes glass-out {
+                0% {
+                    opacity: 1;
+                }
+                18% {
+                    opacity: 0.92;
+                }
+                60% {
+                    opacity: 0.38;
+                }
+                100% {
+                    opacity: 0;
+                }
+            }
+            #glass-overlay svg {
+                width: 100%;
+                height: 100%;
+                /* filter set dynamically in JS per left/right */
+            }
+
+            /* ── Background image easter eggs ── */
+            #bg-image-overlay {
+                position: fixed;
+                inset: 0;
+                pointer-events: none;
+                z-index: 62;
+                opacity: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            #bg-image-overlay img {
+                width: min(480px, 62vw);
+                height: auto;
+                mix-blend-mode: screen;
+                transform: translateY(-18vh);
+            }
+            @media (max-width: 768px) {
+                #bg-image-overlay img { transform: translateY(-8vh); }
+            }
+            #bg-image-overlay.appear {
+                animation: bg-image-in 1.0s ease-in-out forwards;
+            }
+            @keyframes bg-image-in {
+                0%   { opacity: 0; }
+                8%   { opacity: 0.82; }
+                55%  { opacity: 0.70; }
+                100% { opacity: 0; }
+            }
+
+            /* ── Logo dim — centre sombre pendant impact text ── */
+            #logo-dim {
+                position: fixed;
+                inset: 0;
+                pointer-events: none;
+                z-index: 64;
+                opacity: 0;
+                background: radial-gradient(
+                    ellipse 62% 40% at 50% 50%,
+                    rgba(0,0,0,0.96) 0%,
+                    rgba(0,0,0,0.80) 30%,
+                    rgba(0,0,0,0.40) 58%,
+                    transparent 78%
+                );
+            }
+            #logo-dim.active {
+                animation: logo-dim-anim 2.0s ease-out forwards;
+            }
+            @keyframes logo-dim-anim {
+                0%   { opacity: 1; }
+                8%   { opacity: 1; }
+                30%  { opacity: 0.92; }
+                100% { opacity: 0; }
+            }
+
+            /* ── Edge vignette (heavy only) ── */
+            #vignette-shock {
+                position: fixed;
+                inset: 0;
+                pointer-events: none;
+                z-index: 55;
+                opacity: 0;
+                background: radial-gradient(
+                    ellipse 70% 70% at 50% 50%,
+                    transparent 20%,
+                    rgba(0, 0, 0, 0.92) 100%
+                );
+            }
+            #vignette-shock.active {
+                opacity: 1;
+                transition: none;
+            }
+            #vignette-shock.fading {
+                opacity: 0;
+                transition: opacity 1.6s ease;
+            }
+
+            /* ── Background neon burst (medium / heavy) ── */
+            #bg-flash {
+                position: fixed;
+                inset: 0;
+                pointer-events: none;
+                z-index: 51;
+                opacity: 0;
+                background: radial-gradient(
+                    ellipse 65% 45% at 50% 50%,
+                    rgba(160, 50, 255, 0.62) 0%,
+                    rgba(80, 20, 240, 0.38) 30%,
+                    rgba(20, 60, 255, 0.16) 58%,
+                    transparent 80%
+                );
+            }
+            #bg-flash.burst-medium {
+                animation: bg-burst 0.38s ease-out forwards;
+            }
+            #bg-flash.burst-heavy {
+                animation: bg-burst 0.38s ease-out forwards;
+            }
+            @keyframes bg-burst {
+                0% {
+                    opacity: 1;
+                }
+                12% {
+                    opacity: 0.88;
+                }
+                100% {
+                    opacity: 0;
+                }
+            }
+
+            /* ── Impact text — flash on shock ── */
+            #impact-text {
+                position: fixed;
+                inset: 0;
+                pointer-events: none;
+                z-index: 88;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                opacity: 0;
+                font-family: "Courier New", monospace;
+                font-size: clamp(2.2rem, 9vw, 6rem);
+                font-weight: 900;
+                text-transform: uppercase;
+                letter-spacing: 0.12em;
+                text-align: center;
+                white-space: nowrap;
+            }
+            #impact-text.hit-medium {
+                animation: impact-flash 0.75s cubic-bezier(0.1, 0.7, 0.3, 1)
+                    forwards;
+            }
+            #impact-text.hit-heavy {
+                animation: impact-flash 1s cubic-bezier(0.1, 0.7, 0.3, 1)
+                    forwards;
+            }
+            @keyframes impact-flash {
+                0% {
+                    opacity: 1;
+                    transform: scale(1.45);
+                    filter: brightness(4) blur(3px);
+                }
+                10% {
+                    opacity: 1;
+                    transform: scale(1);
+                    filter: brightness(2) blur(0px);
+                }
+                55% {
+                    opacity: 0.8;
+                    transform: scale(0.97);
+                }
+                100% {
+                    opacity: 0;
+                    transform: scale(0.9);
+                }
+            }
+            #logo.neon-surge {
+                animation: neon-surge 0.85s ease-in-out forwards;
+            }
+            @keyframes neon-surge {
+                0% {
+                    filter: brightness(1) saturate(1);
+                }
+                10% {
+                    filter: brightness(2.1) saturate(0.5) hue-rotate(14deg);
+                }
+                24% {
+                    filter: brightness(0.72) saturate(1.5);
+                }
+                40% {
+                    filter: brightness(1.55) saturate(0.85) hue-rotate(-10deg);
+                }
+                58% {
+                    filter: brightness(0.9) saturate(1.15);
+                }
+                74% {
+                    filter: brightness(1.14) saturate(1);
+                }
+                100% {
+                    filter: brightness(1) saturate(1);
+                }
+            }
+            /* ── Hint text — clin d'œil subliminal "bon/superbon" ── */
+            #hint-text {
+                position: fixed;
+                inset: 0;
+                pointer-events: none;
+                z-index: 35;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                opacity: 0;
+                font-family: "Courier New", monospace;
+                font-size: clamp(0.9rem, 2.5vw, 1.6rem);
+                letter-spacing: 0.35em;
+                color: rgba(255, 255, 255, 0.38);
+                text-transform: lowercase;
+                white-space: nowrap;
+            }
+            #hint-text.show {
+                animation: hint-appear 2s ease-out forwards;
+            }
+            @keyframes hint-appear {
+                0% {
+                    opacity: 0;
+                }
+                12% {
+                    opacity: 0.55;
+                }
+                60% {
+                    opacity: 0.45;
+                }
+                100% {
+                    opacity: 0;
+                }
+            }
+
+            /* ── Strike background (sbbgec1.png — heavy only) ── */
+            #strike-bg {
+                position: fixed; inset: 0; pointer-events: none;
+                z-index: 60; opacity: 0;
+                display: flex; align-items: center; justify-content: center;
+            }
+            #strike-bg img {
+                width: 100%; height: 100%; object-fit: cover;
+                mix-blend-mode: screen;
+            }
+            #strike-bg.flash { animation: strike-bg-in 0.9s ease-out forwards; }
+            @keyframes strike-bg-in {
+                0%   { opacity: 0; }
+                6%   { opacity: 0.88; }
+                35%  { opacity: 0.70; }
+                100% { opacity: 0; }
+            }
+        </style>
+    </head>
+    <body>
+        <div id="flash"></div>
+        <div id="bg-flash"></div>
+        <div id="strike-bg"><img src="sbbgec1.jpg" alt=""></div>
+
+        <div id="impact-text"></div>
+        <div id="hint-text"></div>
+
+        <!-- Spaceship: ultra-rare easter egg -->
+        <div id="ship-overlay">
+            <img src="sbspaceship.png" alt="" />
+        </div>
+
+        <!-- Background image easter eggs (dogs) -->
+        <div id="bg-image-overlay">
+            <img src="" alt="" />
+        </div>
+
+        <!-- Lightning -->
+        <div id="lightning-overlay">
+            <svg xmlns="http://www.w3.org/2000/svg">
+                <g id="lightning-lines"></g>
+            </svg>
+        </div>
+
+        <!-- Glass crack -->
+        <div id="glass-overlay">
+            <svg xmlns="http://www.w3.org/2000/svg">
+                <g id="glass-lines"></g>
+            </svg>
+        </div>
+
+        <div id="vignette-shock"></div>
+        <div id="logo-dim"></div>
+
+        <div id="logo-wrap">
+            <img id="logo" src="sblogo.png" alt="superbon" />
+        </div>
+
+        <div class="terminal">
+            <span id="typed"></span>
+            <span class="cursor"></span>
+        </div>
+
+        <script>
+            const SEQUENCE = [
+
+              // ── OUVERTURE — rafale rapide ──────────────────────────
+              { word: "musique",       delay: [400, 400] , impact: { m: ["ELECTRO !"], h: ["ELECTRO !!!"] }, "forceLevel": "none" },
+              { word: "electro",       delay: [400, 400] , impact: { m: ["ELECTRO !"], h: ["ELECTRO !!!"] }, "forceLevel": "heavy" },
+/*          
+              { word: "pulse",         delay: [400, 400] , impact: { m: ["PULSE !"], h: ["PULSE !!!"] } },
+              { word: "kick",          delay: [400, 400] , impact: { m: ["KICK !"], h: ["KICK !!!"] } },
+              { word: "techno",        delay: [400, 400] , impact: { m: ["TECHNO !"], h: ["TECHNO !!!"] } },
+              { word: "acid",          delay: [400, 400] , impact: { m: ["ACID !"], h: ["ACID !!!"] } },
+              { word: "303",           delay: [400, 400] , impact: { m: ["303 !"], h: ["303 !!!"] } },
+
+              // ── FRAPPE #1 — subliminal ──────────────────────────────
+              { word: "noise",
+                delay: [3000, 2000], forceLevel: "heavy",
+                impact: { m: ["...bon ?"], h: ["...bon ?"] } },
+
+              // ── MACHINE ────────────────────────────────────────────
+              { word: "analogique",    delay: [700, 600] , impact: { m: ["ANALOGIQUE !"], h: ["TROP ANALOGIQUE !"] } },
+              { word: "voltage",       delay: [700, 600] , impact: { m: ["VOLTAGE !"], h: ["HAUTE TENSION !"] } },
+              { word: "oscillation",   delay: [700, 600] , impact: { m: ["OSCILLE !"], h: ["CA OSCILLE !!!"] } },
+              { word: "basse",         delay: [700, 600] , impact: { m: ["LA BASSE !"], h: ["BASSE PROFONDE !"] } },
+              { word: "909",           delay: [700, 600] , impact: { m: ["909 !"], h: ["909 !!!"] } },
+              { word: "séquence",      delay: [700, 600] , impact: { m: ["EN BOUCLE !"], h: ["LOOP !!!"] } },
+
+              // ── FRAPPE #2 — un peu moins subtile ───────────────────
+              { word: "overdrive",
+                delay: [3000, 2000], forceLevel: "heavy",
+                impact: { m: ["trop bon !"], h: ["TROP BON !"] } },
+
+              // ── GEAR + FEELING ─────────────────────────────────────
+              { word: "groove",        delay: [700, 600] , impact: { m: ["GROOVE !"], h: ["CA GROOVE !!!"] } },
+              { word: "rock",          delay: [700, 600] , impact: { m: ["ROCK !"], h: ["ROCK !!!"] } },
+              { word: "punk",          delay: [700, 600] , impact: { m: ["PUNK !"], h: ["PUNK !!!"] } },
+              { word: "résonance",     delay: [700, 600] , impact: { m: ["RESONNE !"], h: ["CA RESONNE !!!"] } },
+              { word: "distorsion",    delay: [700, 600] , impact: { m: ["DISTORSION !"], h: ["FULL DISTORSION !"] } },
+              { word: "fréquence",     delay: [700, 600] , impact: { m: ["FREQUENCE !"], h: ["SUR LA FREQUENCE !"] } },
+              { word: "sub",           delay: [700, 600] , impact: { m: ["SUB !"], h: ["SUB BASS !!!"] } },
+              { word: "onde sonore",   delay: [700, 600] , impact: { m: ["L'ONDE !"], h: ["L'ONDE !!!"] } },
+              { word: "tension",       delay: [700, 600] , impact: { m: ["TENSION !"], h: ["HAUTE TENSION !!!"] } },
+
+              // ── FRAPPE #3 — assumée ────────────────────────────────
+              { word: "répétition!",
+                delay: [3200, 1800], forceLevel: "heavy",
+                impact: { m: ["BON !"], h: ["BON !!!"] } },
+
+              // ── FEELING MONTE ──────────────────────────────────────
+              { word: "energy",        delay: [700, 600] , impact: { m: ["ENERGY !"], h: ["FULL ENERGY !!!"] } },
+              { word: "hypnotique",    delay: [700, 600] , impact: { m: ["HYPNO !"], h: ["HYPNOTIQUE !!!"] } },
+              { word: "impulsion",     delay: [700, 600] , impact: { m: ["IMPULSION !"], h: ["IMPULSION !!!"] } },
+              { word: "rave",          delay: [700, 600] , impact: { m: ["RAVE !"], h: ["RAVE !!!"] } },
+              { word: "underground",   delay: [700, 600] , impact: { m: ["UNDERGROUND !"], h: ["DEEP UNDERGROUND !"] } },
+              { word: "ça claque",     delay: [800, 600] , impact: { m: ["CA CLAQUE !"], h: ["CA CLAQUE FORT !!!"] } },
+              { word: "ça envoie",     delay: [800, 600] , impact: { m: ["CA ENVOIE !"], h: ["CA ENVOIE GRAVE !!!"] } },
+              { word: "synthèse",      delay: [700, 600] , impact: { m: ["SYNTHESE !"], h: ["SYNTHESE TOTALE !"] } },
+
+              // ── "BON" ENTRE DANS LE TEXTE ──────────────────────────
+              { word: "...bon.",       delay: [2000, 1400] , impact: { m: ["...bon ?"], h: ["...bon !"] } },
+              { word: "trop bon",      delay: [1400, 1000] , impact: { m: ["TROP BON !"], h: ["TROP BON !!!"] } },
+              { word: "vraiment bon",  delay: [1400, 1000] , impact: { m: ["VRAIMENT BON !"], h: ["VRAIMENT BON !!!"] } },
+              { word: "BON",
+                delay: [3000, 2000], forceLevel: "heavy",
+                impact: { m: ["BON !"], h: ["BON !!!"] } },
+
+              // ── "SUPER" ARRIVE ─────────────────────────────────────
+              { word: "super energie", delay: [900, 600] , impact: { m: ["SUPER ENERGY !"], h: ["SUPER ENERGY !!!"] } },
+              { word: "super claque",  delay: [900, 600] , impact: { m: ["SUPER CLAQUE !"], h: ["SUPER CLAQUE !!!"] } },
+              { word: "yeah super",    delay: [900, 600] , impact: { m: ["YEAH !"], h: ["YEAH SUPER !!!"] } },
+              { word: "SUPER",
+                delay: [3000, 2000], forceLevel: "heavy",
+                impact: { m: ["SUPER !"], h: ["SUPER !!!"] } },
+
+              // ── CONVERGENCE ────────────────────────────────────────
+              { word: "bon + super ?",  delay: [1800, 1200] , impact: { m: ["BON + SUPER ?"], h: ["BON + SUPER !!!"] } },
+              { word: "super... bon ?", delay: [1800, 1200] , impact: { m: ["SUPER... BON ?"], h: ["SUPER BON !!!"] } },
+              { word: "superbon ?",     delay: [2000, 1200] , impact: { m: ["SUPERBON ?!"], h: ["SUPERBON !!!"] } },
+              { word: "attends...",     delay: [2500, 1500] , impact: { m: ["ATTENDS !"], h: ["ATTENDS !!!"] } },
+              { word: "SUPERBON",
+                delay: [3500, 1500], forceLevel: "heavy",
+                impact: { m: ["SUPERBON !"], h: ["SUPERBON !!!"] } },
+              { word: "c'est ça !",     delay: [1600, 1000] },
+              { word: "superbon !!!",
+                delay: [2500, 1500], forceLevel: "heavy",
+                impact: { m: ["C'EST ÇA !"], h: ["C'EST SUPERBON !!!"] } },
+
+              // ── SONNE + MÉTA ───────────────────────────────────────
+              { word: "ça sonne... superbon", delay: [2500, 1500] },
+              { word: "ouais. superbon.",     delay: [2500, 1500] , impact: { m: ["OUAIS !"], h: ["OUAIS SUPERBON !!!"] } },
+              { word: 'c\'est "superbon"',   delay: [2000, 1200] },
+              { word: "tu as tout lu ?!",     delay: [2000, 1200] , impact: { m: ["TOUT LU ?!"], h: ["TU AS TOUT LU !!!"] } },
+              { word: "vraiment ?!",          delay: [1500, 1000] , impact: { m: ["VRAIMENT ?!"], h: ["INCROYABLE !!!"] } },
+              { word: "toute la séquence ?!", delay: [2000, 1200] },
+              { word: "respect.",             delay: [2500, 1500] , impact: { m: ["RESPECT !"], h: ["RESPECT !!!"] } },
+              { word: "encore une fois ?",    delay: [2000, 1200] , impact: { m: ["ENCORE ?!"], h: ["ENCORE UNE FOIS !!!"] } },
+              { word: "**+. and we start again .+**", delay: [3000, 2000] , impact: { m: ["LOOP !"], h: ["AND WE START AGAIN !!!"] } },
+*/
+            ];
+
+            const SVG_NS = "http://www.w3.org/2000/svg";
+            const el = document.getElementById("typed");
+            const terminalEl = el.closest(".terminal") || el.parentElement;
+            const logoWrap = document.getElementById("logo-wrap");
+            const logo = document.getElementById("logo");
+            const flashEl = document.getElementById("flash");
+            const lightEl = document.getElementById("lightning-overlay");
+            const lightSvg = lightEl.querySelector("svg");
+            const lightG = document.getElementById("lightning-lines");
+            const glassEl = document.getElementById("glass-overlay");
+            const glassSvg = glassEl.querySelector("svg");
+            const glassG = document.getElementById("glass-lines");
+            const vigEl = document.getElementById("vignette-shock");
+            let mi = 0,
+                ci = 0,
+                pressure = 0,
+                currentTilt = 0;
+
+            // ── Helpers ────────────────────────────────────────
+
+            function randomLogoEdgePoint(rect) {
+                const pts = [
+                    { x: rect.left, y: rect.top },
+                    { x: rect.right, y: rect.top },
+                    { x: rect.left, y: rect.bottom },
+                    { x: rect.right, y: rect.bottom },
+                    { x: rect.left + rect.width * 0.25, y: rect.top },
+                    { x: rect.left + rect.width * 0.5, y: rect.top },
+                    { x: rect.left + rect.width * 0.75, y: rect.top },
+                    { x: rect.left + rect.width * 0.25, y: rect.bottom },
+                    { x: rect.left + rect.width * 0.5, y: rect.bottom },
+                    { x: rect.left + rect.width * 0.75, y: rect.bottom },
+                    { x: rect.left, y: rect.top + rect.height * 0.5 },
+                    { x: rect.right, y: rect.top + rect.height * 0.5 },
+                ];
+                return pts[Math.floor(Math.random() * pts.length)];
+            }
+
+            // Jagged polyline — deviation 0=straight, 0.2=lightning, 0.06=glass
+            function jaggedLine(x1, y1, x2, y2, steps, deviation) {
+                const len = Math.hypot(x2 - x1, y2 - y1);
+                if (len < 1) return `${x1},${y1}`;
+                const nx = -(y2 - y1) / len;
+                const ny = (x2 - x1) / len;
+                const pts = [`${x1.toFixed(1)},${y1.toFixed(1)}`];
+                for (let i = 1; i < steps; i++) {
+                    const t = i / steps;
+                    const jt = (Math.random() - 0.5) * len * deviation;
+                    pts.push(
+                        `${(x1 + (x2 - x1) * t + nx * jt).toFixed(1)},` +
+                            `${(y1 + (y2 - y1) * t + ny * jt).toFixed(1)}`,
+                    );
+                }
+                pts.push(`${x2.toFixed(1)},${y2.toFixed(1)}`);
+                return pts.join(" ");
+            }
+
+            function makePoly(parent, pts, sw, color) {
+                const pl = document.createElementNS(SVG_NS, "polyline");
+                pl.setAttribute("points", pts);
+                pl.setAttribute("stroke", color);
+                pl.setAttribute("stroke-width", sw);
+                pl.setAttribute("fill", "none");
+                pl.setAttribute("stroke-linecap", "round");
+                pl.setAttribute("stroke-linejoin", "round");
+                parent.appendChild(pl);
+            }
+
+            function makePath(parent, d, sw, color) {
+                const p = document.createElementNS(SVG_NS, "path");
+                p.setAttribute("d", d);
+                p.setAttribute("stroke", color);
+                p.setAttribute("stroke-width", sw);
+                p.setAttribute("fill", "none");
+                p.setAttribute("stroke-linecap", "round");
+                parent.appendChild(p);
+            }
+
+            // ── Spaceship ──────────────────────────────────────
+            const shipEl = document.getElementById("ship-overlay");
+            const bgFlashEl = document.getElementById("bg-flash");
+            const bgImgEl = document.getElementById("bg-image-overlay");
+            const bgImgTag = bgImgEl.querySelector("img");
+            const impactEl = document.getElementById("impact-text");
+            const BG_IMAGES = ["sbdg3.png"];
+            let shipBusy = false;
+            let lastGuestAt = -99;
+            let nextGuest = Math.random() < 0.5 ? 'ship' : 'dog';
+            let dogBusy  = false; // prevents double dog
+            const strikeBgEl = document.getElementById("strike-bg");
+
+            const IMPACT_MEDIUM = [
+                "ÇA CLAQUE !",
+                "TROP BON !",
+                "YEAH !",
+                "C'EST BON !",
+                "OUAIS !",
+                "BOOM !",
+                "ÉNERGIE !",
+                "PULSE !",
+                "CLASH !",
+                "BANG !",
+                "ACID !",
+                "KICK !",
+                "GROOVE !",
+                "NOISE !",
+            ];
+            const IMPACT_HEAVY = [
+                "SUPERBON !",
+                "ÇA ENVOIE !",
+                "RÉPÉTITION !",
+                "YEAH SUPER !",
+                "TROP BON !!!",
+                "FULL POWER !",
+                "C'EST SUPERBON !",
+                "CLAQUE !!!",
+                "SUPERBON !!!",
+                "VOLTAGE !",
+                "OVERDRIVE !",
+                "DISTORSION !",
+            ];
+
+            function showSpaceship() {
+                if (shipBusy) return;
+                shipBusy = true;
+                shipEl.classList.remove("appear");
+                void shipEl.offsetWidth;
+                shipEl.classList.add("appear");
+                shipEl.addEventListener(
+                    "animationend",
+                    () => {
+                        shipEl.classList.remove("appear");
+                        shipBusy = false;
+                    },
+                    { once: true },
+                );
+            }
+
+            function showBgImage() {
+                if (dogBusy) return;
+                dogBusy = true;
+                bgImgTag.src =
+                    BG_IMAGES[Math.floor(Math.random() * BG_IMAGES.length)];
+                bgImgEl.classList.remove("appear");
+                void bgImgEl.offsetWidth;
+                bgImgEl.classList.add("appear");
+                bgImgEl.addEventListener(
+                    "animationend",
+                    () => {
+                        bgImgEl.classList.remove("appear");
+                        dogBusy = false;
+                    },
+                    { once: true },
+                );
+            }
+
+            function showStrikeBg() {
+                strikeBgEl.classList.remove("flash");
+                void strikeBgEl.offsetWidth;
+                strikeBgEl.classList.add("flash");
+                strikeBgEl.addEventListener("animationend",
+                    () => strikeBgEl.classList.remove("flash"), { once: true });
+            }
+
+                        function showImpactText(level, r, g, b) {
+                const entry = SEQUENCE[mi];
+                const pool = (entry && entry.impact)
+                    ? (level === "heavy" ? entry.impact.h : entry.impact.m)
+                    : (level === "heavy" ? IMPACT_HEAVY : IMPACT_MEDIUM);
+                impactEl.textContent =
+                    pool[Math.floor(Math.random() * pool.length)];
+                impactEl.style.color = `rgb(${r},${g},${b})`;
+                impactEl.style.textShadow = `0 0 18px rgba(${r},${g},${b},1), 0 0 55px rgba(${r},${g},${b},0.7), 0 0 110px rgba(${r},${g},${b},0.35)`;
+                impactEl.className = "";
+                void impactEl.offsetWidth;
+                impactEl.classList.add("hit-" + level);
+                impactEl.addEventListener(
+                    "animationend",
+                    () => {
+                        impactEl.className = "";
+                        impactEl.textContent = "";
+                    },
+                    { once: true },
+                );
+                // Dim the logo so impact text pops
+                const logoDimEl = document.getElementById("logo-dim");
+                logoDimEl.classList.remove("active");
+                void logoDimEl.offsetWidth;
+                logoDimEl.classList.add("active");
+                logoDimEl.addEventListener("animationend",
+                    () => logoDimEl.classList.remove("active"), { once: true });
+            }
+
+            // ── Lightning (volumetric triple-pass) ─────────────
+            function showLightning(intensity) {
+                const W = window.innerWidth;
+                const H = window.innerHeight;
+                const rect = logo.getBoundingClientRect();
+                lightSvg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+                lightG.innerHTML = "";
+
+                const { x: ox, y: oy } = randomLogoEdgePoint(rect);
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                const baseA = Math.atan2(oy - cy, ox - cx);
+
+                // Color: left → blue, right → pink (matches logo gradient)
+                const isLeft = ox < cx;
+                const secColor = isLeft
+                    ? "rgba(90,225,255,0.95)"
+                    : "rgba(255,40,195,0.95)";
+                const brnColor = isLeft
+                    ? "rgba(60,240,255,0.88)"
+                    : "rgba(255,20,215,0.88)";
+
+                lightSvg.style.filter = isLeft
+                    ? "drop-shadow(0 0 4px rgba(255,255,255,1.0)) drop-shadow(0 0 14px rgba(90,225,255,1.0)) drop-shadow(0 0 35px rgba(40,190,255,1.0)) drop-shadow(0 0 70px rgba(20,120,255,0.80)) drop-shadow(0 0 120px rgba(10,60,220,0.45))"
+                    : "drop-shadow(0 0 4px rgba(255,255,255,1.0)) drop-shadow(0 0 14px rgba(255,40,195,1.0)) drop-shadow(0 0 35px rgba(240,20,170,1.0)) drop-shadow(0 0 70px rgba(200,10,150,0.80)) drop-shadow(0 0 120px rgba(160,5,120,0.45))";
+
+                const [r, g, b] = isLeft ? [90, 225, 255] : [255, 40, 195];
+
+                const count =
+                    intensity === "heavy"
+                        ? 3 + Math.floor(Math.random() * 3)
+                        : intensity === "medium"
+                          ? 2
+                          : 1;
+
+                for (let i = 0; i < count; i++) {
+                    const spread = count > 1 ? 0.85 : 0.3;
+                    const angle = baseA + (Math.random() - 0.5) * spread;
+                    const dist = Math.max(W, H) * (0.35 + Math.random() * 0.45);
+                    const tx = ox + Math.cos(angle) * dist;
+                    const ty = oy + Math.sin(angle) * dist;
+                    const steps = 8 + Math.floor(Math.random() * 6);
+                    const pts = jaggedLine(ox, oy, tx, ty, steps, 0.2);
+                    const isMain = i === 0;
+
+                    // Pass 1 — cloud body (thick, near-transparent)
+                    makePoly(
+                        lightG,
+                        pts,
+                        isMain ? 45 : 25,
+                        `rgba(${r},${g},${b},0.045)`,
+                    );
+                    // Pass 2 — inner glow
+                    makePoly(
+                        lightG,
+                        pts,
+                        isMain ? 10 : 5,
+                        `rgba(${r},${g},${b},0.18)`,
+                    );
+                    // Pass 3 — bright core
+                    makePoly(
+                        lightG,
+                        pts,
+                        isMain ? 0.9 : 0.55,
+                        "rgba(255,255,255,0.95)",
+                    );
+
+                    // Branch
+                    if (Math.random() > 0.38) {
+                        const bt = 0.28 + Math.random() * 0.38;
+                        const bx = ox + (tx - ox) * bt;
+                        const by_ = oy + (ty - oy) * bt;
+                        const ba =
+                            angle +
+                            (Math.random() > 0.5 ? 1 : -1) *
+                                (0.45 + Math.random() * 0.55);
+                        const bd = dist * (0.18 + Math.random() * 0.22);
+                        const bpts = jaggedLine(
+                            bx,
+                            by_,
+                            bx + Math.cos(ba) * bd,
+                            by_ + Math.sin(ba) * bd,
+                            4,
+                            0.22,
+                        );
+                        makePoly(lightG, bpts, 15, `rgba(${r},${g},${b},0.04)`);
+                        makePoly(
+                            lightG,
+                            bpts,
+                            0.4,
+                            `rgba(${r},${g},${b},0.80)`,
+                        );
+                    }
+                }
+
+                lightEl.classList.remove("strike");
+                void lightEl.offsetWidth;
+                lightEl.classList.add("strike");
+            }
+
+            // ── Glass crack — triple-pass volumetric fracture tree ──
+            function showGlassCrack(intensity) {
+                const W = window.innerWidth;
+                const H = window.innerHeight;
+                const rect = logo.getBoundingClientRect();
+                glassSvg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+                glassG.innerHTML = "";
+
+                const { x: ox, y: oy } = randomLogoEdgePoint(rect);
+                const cx = rect.left + rect.width / 2;
+                const isLeft = ox < cx;
+                const [r, g, b] = isLeft ? [90, 225, 255] : [255, 40, 195];
+
+                // Color-synced glow filter (matches lightning)
+                glassSvg.style.filter = isLeft
+                    ? "drop-shadow(0 0 2px rgba(255,255,255,0.9)) drop-shadow(0 0 6px rgba(90,225,255,0.95)) drop-shadow(0 0 16px rgba(40,190,255,0.70)) drop-shadow(0 0 36px rgba(20,120,255,0.35))"
+                    : "drop-shadow(0 0 2px rgba(255,255,255,0.9)) drop-shadow(0 0 6px rgba(255,40,195,0.95)) drop-shadow(0 0 16px rgba(240,20,170,0.70)) drop-shadow(0 0 36px rgba(200,10,150,0.35))";
+
+                const maxDepth =
+                    intensity === "heavy" ? 4 : intensity === "medium" ? 3 : 2;
+                const numRoots =
+                    intensity === "heavy"
+                        ? 5 + Math.floor(Math.random() * 4)
+                        : intensity === "medium"
+                          ? 3 + Math.floor(Math.random() * 3)
+                          : 2 + Math.floor(Math.random() * 2);
+                const maxLen =
+                    intensity === "heavy"
+                        ? Math.min(W, H) * 0.42
+                        : intensity === "medium"
+                          ? Math.min(W, H) * 0.27
+                          : Math.min(W, H) * 0.16;
+
+                // Triple-pass: cloud body + inner glow + bright white core
+                function crackLine(parent, pts, sw, depth) {
+                    const isRoot = depth >= maxDepth - 1;
+                    makePoly(
+                        parent,
+                        pts,
+                        sw * 16,
+                        `rgba(${r},${g},${b},${isRoot ? 0.07 : 0.03})`,
+                    );
+                    makePoly(
+                        parent,
+                        pts,
+                        sw * 4.5,
+                        `rgba(${r},${g},${b},${isRoot ? 0.24 : 0.12})`,
+                    );
+                    makePoly(
+                        parent,
+                        pts,
+                        sw,
+                        `rgba(255,255,255,${isRoot ? 0.9 : 0.55})`,
+                    );
+                }
+
+                function drawCrack(x1, y1, angle, len, depth, sw) {
+                    if (len < 8 || depth < 0) return;
+                    const x2 = x1 + Math.cos(angle) * len;
+                    const y2 = y1 + Math.sin(angle) * len;
+                    const steps = Math.max(3, Math.floor(len / 14));
+                    crackLine(
+                        glassG,
+                        jaggedLine(x1, y1, x2, y2, steps, 0.07),
+                        sw,
+                        depth,
+                    );
+
+                    // Shard connector
+                    if (depth >= 1 && Math.random() > 0.55) {
+                        const st = 0.22 + Math.random() * 0.55;
+                        const sx = x1 + (x2 - x1) * st;
+                        const sy = y1 + (y2 - y1) * st;
+                        const sa =
+                            angle +
+                            Math.PI *
+                                (0.3 + Math.random() * 0.4) *
+                                (Math.random() > 0.5 ? 1 : -1);
+                        const sl = len * (0.08 + Math.random() * 0.14);
+                        crackLine(
+                            glassG,
+                            jaggedLine(
+                                sx,
+                                sy,
+                                sx + Math.cos(sa) * sl,
+                                sy + Math.sin(sa) * sl,
+                                3,
+                                0.06,
+                            ),
+                            sw * 0.42,
+                            depth - 1,
+                        );
+                    }
+
+                    if (depth <= 0) return;
+
+                    // Branch 1
+                    const t1 = 0.32 + Math.random() * 0.32;
+                    drawCrack(
+                        x1 + (x2 - x1) * t1,
+                        y1 + (y2 - y1) * t1,
+                        angle +
+                            (Math.random() > 0.5 ? 1 : -1) *
+                                (0.3 + Math.random() * 0.45),
+                        len * (0.38 + Math.random() * 0.28),
+                        depth - 1,
+                        sw * 0.6,
+                    );
+
+                    // Branch 2 — 55% chance
+                    if (Math.random() > 0.45) {
+                        const t2 = 0.58 + Math.random() * 0.26;
+                        drawCrack(
+                            x1 + (x2 - x1) * t2,
+                            y1 + (y2 - y1) * t2,
+                            angle +
+                                (Math.random() > 0.5 ? 1 : -1) *
+                                    (0.2 + Math.random() * 0.35),
+                            len * (0.22 + Math.random() * 0.18),
+                            depth - 1,
+                            sw * 0.48,
+                        );
+                    }
+                }
+
+                // Impact starburst at origin
+                const starCount = intensity === "heavy" ? 8 : 5;
+                for (let i = 0; i < starCount; i++) {
+                    const sa = (i / starCount) * Math.PI * 2;
+                    const sl = 7 + Math.random() * 14;
+                    const spts = `${ox.toFixed(1)},${oy.toFixed(1)} ${(ox + Math.cos(sa) * sl).toFixed(1)},${(oy + Math.sin(sa) * sl).toFixed(1)}`;
+                    makePoly(glassG, spts, 7, `rgba(${r},${g},${b},0.08)`);
+                    makePoly(glassG, spts, 1.8, `rgba(${r},${g},${b},0.28)`);
+                    makePoly(glassG, spts, 0.4, `rgba(255,255,255,0.88)`);
+                }
+
+                // Root cracks spreading from impact
+                for (let i = 0; i < numRoots; i++) {
+                    const baseAngle = (i / numRoots) * Math.PI * 2;
+                    const angle =
+                        baseAngle +
+                        (Math.random() - 0.5) * ((Math.PI / numRoots) * 1.4);
+                    drawCrack(
+                        ox,
+                        oy,
+                        angle,
+                        maxLen * (0.55 + Math.random() * 0.45),
+                        maxDepth,
+                        0.28,
+                    );
+                }
+
+                glassEl.classList.remove("strike");
+                void glassEl.offsetWidth;
+                glassEl.classList.add("strike");
+            }
+
+            // ── Shock helpers ──────────────────────────────────
+            const SHIP_CHANCE = 0.12; // set to 0.03 for production
+
+            function doBgFlash(level) {
+                bgFlashEl.classList.remove("burst-medium", "burst-heavy");
+                void bgFlashEl.offsetWidth;
+                bgFlashEl.classList.add("burst-" + level);
+            }
+
+            function doNeonSurge() {
+                logo.classList.remove("neon-surge");
+                void logo.offsetWidth;
+                logo.classList.add("neon-surge");
+                logo.addEventListener(
+                    "animationend",
+                    () => logo.classList.remove("neon-surge"),
+                    { once: true },
+                );
+            }
+
+            function logoRestore(smooth) {
+                if (smooth) {
+                    logoWrap.style.transition = "transform 0.4s ease";
+                    logo.style.transition =
+                        "opacity 0.4s ease, filter 0.4s ease";
+                } else {
+                    logoWrap.style.transition = "";
+                    logo.style.transition = "";
+                }
+                logoWrap.style.transform = "";
+                logo.style.opacity = "";
+                logo.style.filter = "";
+            }
+
+            function doShake(level) {
+                logo.classList.remove(
+                    "shock-light",
+                    "shock-medium",
+                    "shock-heavy",
+                );
+                void logo.offsetWidth;
+                logo.classList.add("shock-" + level);
+                logo.addEventListener(
+                    "animationend",
+                    () => {
+                        logo.classList.remove(
+                            "shock-light",
+                            "shock-medium",
+                            "shock-heavy",
+                        );
+                    },
+                    { once: true },
+                );
+            }
+
+            function doPump(level) {
+                logoWrap.classList.remove("pump-heavy", "pump-medium");
+                void logoWrap.offsetWidth;
+                logoWrap.classList.add("pump-" + level);
+                logoWrap.addEventListener(
+                    "animationend",
+                    () => {
+                        logoWrap.classList.remove("pump-heavy", "pump-medium");
+                    },
+                    { once: true },
+                );
+            }
+
+            function doFlash() {
+                flashEl.classList.remove("pop");
+                void flashEl.offsetWidth;
+                flashEl.classList.add("pop");
+            }
+
+            function doVignette() {
+                vigEl.classList.remove("fading");
+                vigEl.classList.add("active");
+                setTimeout(() => {
+                    vigEl.classList.remove("active");
+                    vigEl.classList.add("fading");
+                }, 900);
+            }
+
+            // ── Shock dispatcher ─────────────────────────────
+            // NONE     5% — soft restore + optional mini bolt
+            // WHISPER  8% — shake + mini bolt
+            // LIGHT   15% — shake + lightning
+            // MEDIUM  38% — full medium (no crack)
+            // HEAVY   34% — full heavy (no crack)
+            function triggerShock(forceLevel) {
+                const isLeft = Math.random() > 0.5;
+                const [cr, cg, cb] = isLeft ? [90, 225, 255] : [255, 40, 195];
+
+                let level;
+                if (forceLevel) {
+                    level = forceLevel;
+                    pressure = 0;
+                } else {
+                    const pressureBoost = Math.min(pressure * 0.038, 0.38);
+                    const r = Math.random() - pressureBoost;
+                    pressure = 0;
+                    if      (r < 0.05) level = "none";
+                    else if (r < 0.13) level = "whisper";
+                    else if (r < 0.28) level = "light";
+                    else if (r < 0.66) level = "medium";
+                    else               level = "heavy";
+                }
+
+                if (level === "none") {
+                    logoRestore(true);
+                    if (Math.random() > 0.5) showLightning("light"); // mini bolt 50%
+                    return;
+                }
+
+                logoRestore(false);
+
+                if (level === "whisper") {
+                    doShake("light");
+                    showLightning("light");
+                    return;
+                }
+
+                if (level === "light") {
+                    doShake("light");
+                    showLightning("light");
+                    if (Math.random() > 0.5) setTimeout(() => showLightning("light"), 80);
+                    return;
+                }
+
+                if (level === "medium") {
+                    doShake("medium");
+                    doPump("medium");
+                    doFlash();
+                    doBgFlash("medium");
+                    showLightning("medium");
+                    // Impact text 1/3 du temps — sinon ship ou chien
+                    if (forceLevel) {
+                        showImpactText("medium", cr, cg, cb);
+                    } else if (Math.random() < 0.33) {
+                        showImpactText("medium", cr, cg, cb);
+                    } else if (mi - lastGuestAt >= 2 && Math.random() < 0.45) {
+                        if (nextGuest === 'ship') { showSpaceship(); } else { showBgImage(); }
+                        lastGuestAt = mi;
+                        nextGuest = (nextGuest === 'ship') ? 'dog' : 'ship';
+                    }
+                    return;
+                }
+
+                // ── HEAVY
+                doShake("heavy");
+                doPump("heavy");
+                doFlash();
+                doBgFlash("heavy");
+                doVignette();
+                showLightning("heavy");
+                showStrikeBg();
+                // Impact text 1/3 du temps — sinon ship ou chien
+                if (forceLevel) {
+                    showImpactText("heavy", cr, cg, cb);
+                } else if (Math.random() < 0.33) {
+                    showImpactText("heavy", cr, cg, cb);
+                } else if (mi - lastGuestAt >= 2 && Math.random() < 0.45) {
+                    if (nextGuest === 'ship') { showSpaceship(); } else { showBgImage(); }
+                    lastGuestAt = mi;
+                    nextGuest = (nextGuest === 'ship') ? 'dog' : 'ship';
+                }
+            }
+
+            // ── Typing loop ────────────────────────────────────
+            function fall() {
+                const entry = SEQUENCE[mi];
+                el.style.animation = "fall 0.55s ease-in forwards";
+                triggerShock(entry.forceLevel);
+                setTimeout(() => {
+                    el.style.animation = "";
+                    el.textContent = "";
+                    ci = 0;
+                    mi = (mi + 1) % SEQUENCE.length;
+                    doNeonSurge();
+                    const [base, range] = entry.delay || [2200, 1800];
+                    setTimeout(tick, base + Math.random() * range);
+                }, 550);
+            }
+
+            function tick() {
+                const word = SEQUENCE[mi].word;
+                if (ci === 0) {
+                    pressure++;
+                    const maxTilt = Math.min(2 + pressure * 0.7, 10);
+                    currentTilt = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * maxTilt);
+                    const shrink = Math.max(0.42, 0.88 - (pressure - 1) * 0.038);
+                    const dim = Math.max(0.10, 0.35 - (pressure - 1) * 0.022);
+                    logo.style.opacity = String(dim.toFixed(3));
+                    logo.style.filter = "brightness(0.4) saturate(0.5)";
+                    logoWrap.style.transition = "transform 0.18s ease";
+                    logoWrap.style.transform = `scale(${shrink.toFixed(3)}) rotate(${currentTilt.toFixed(1)}deg)`;
+                }
+                ci++;
+                el.textContent = word.slice(0, ci);
+                if (ci === word.length) {
+                    // Mot complet — court moment lisible, puis tombe
+                    setTimeout(fall, 700 + Math.random() * 400);
+                    return;
+                }
+                setTimeout(tick, 75 + Math.random() * 50); // vitesse f05
+            }
+
+            setTimeout(tick, 200);
+        </script>
+    </body>
+</html>
