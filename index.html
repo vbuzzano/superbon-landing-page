@@ -652,7 +652,7 @@
               // ── OUVERTURE — rafale rapide ──────────────────────────
               { word: "musique",       delay: [400, 400] , impact: { m: ["ELECTRO !"], h: ["ELECTRO !!!"] }, "forceLevel": "none" },
               { word: "electro",       delay: [400, 400] , impact: { m: ["ELECTRO !"], h: ["ELECTRO !!!"] }, "forceLevel": "heavy" },
-/*          
+
               { word: "pulse",         delay: [400, 400] , impact: { m: ["PULSE !"], h: ["PULSE !!!"] } },
               { word: "kick",          delay: [400, 400] , impact: { m: ["KICK !"], h: ["KICK !!!"] } },
               { word: "techno",        delay: [400, 400] , impact: { m: ["TECHNO !"], h: ["TECHNO !!!"] } },
@@ -726,7 +726,12 @@
               { word: "attends...",     delay: [2500, 1500] , impact: { m: ["ATTENDS !"], h: ["ATTENDS !!!"] } },
               { word: "SUPERBON",
                 delay: [3500, 1500], forceLevel: "heavy",
-                impact: { m: ["SUPERBON !"], h: ["SUPERBON !!!"] } },
+                impact: { m: ["SUPERBON !"], h: ["SUPERBON !!!"] },
+                guest: { force: "ship", ignoreCooldown: true },
+                forceImpact: false,
+                pressureReset: true,
+                strikeBg: true,
+                side: "left" },
               { word: "c'est ça !",     delay: [1600, 1000] },
               { word: "superbon !!!",
                 delay: [2500, 1500], forceLevel: "heavy",
@@ -737,12 +742,13 @@
               { word: "ouais. superbon.",     delay: [2500, 1500] , impact: { m: ["OUAIS !"], h: ["OUAIS SUPERBON !!!"] } },
               { word: 'c\'est "superbon"',   delay: [2000, 1200] },
               { word: "tu as tout lu ?!",     delay: [2000, 1200] , impact: { m: ["TOUT LU ?!"], h: ["TU AS TOUT LU !!!"] } },
-              { word: "vraiment ?!",          delay: [1500, 1000] , impact: { m: ["VRAIMENT ?!"], h: ["INCROYABLE !!!"] } },
+              { word: "vraiment ?!",          delay: [1500, 1000] , impact: { m: ["VRAIMENT ?!"], h: ["INCROYABLE !!!"] }, forceImpact: true },
               { word: "toute la séquence ?!", delay: [2000, 1200] },
-              { word: "respect.",             delay: [2500, 1500] , impact: { m: ["RESPECT !"], h: ["RESPECT !!!"] } },
+              { word: "respect.",             delay: [2500, 1500] , impact: { m: ["RESPECT !"], h: ["RESPECT !!!"] },
+                guest: { force: "dog", ignoreCooldown: true, dogImage: "sbdg3.png" },
+                forceImpact: false },
               { word: "encore une fois ?",    delay: [2000, 1200] , impact: { m: ["ENCORE ?!"], h: ["ENCORE UNE FOIS !!!"] } },
               { word: "**+. and we start again .+**", delay: [3000, 2000] , impact: { m: ["LOOP !"], h: ["AND WE START AGAIN !!!"] } },
-*/
             ];
 
             // ── Per-entry defaults ────────────────────────────
