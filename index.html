@@ -948,8 +948,8 @@
             }
 
                         function showImpactText(level, r, g, b) {
-                const entry = SEQUENCE[mi];
-                const pool = (entry && entry.impact)
+                const entry = normalizeEntry(SEQUENCE[mi]);
+                const pool = entry.impact
                     ? (level === "heavy" ? entry.impact.h : entry.impact.m)
                     : (level === "heavy" ? IMPACT_HEAVY : IMPACT_MEDIUM);
                 impactEl.textContent =
@@ -958,7 +958,8 @@
                 impactEl.style.textShadow = `0 0 18px rgba(${r},${g},${b},1), 0 0 55px rgba(${r},${g},${b},0.7), 0 0 110px rgba(${r},${g},${b},0.35)`;
                 impactEl.className = "";
                 void impactEl.offsetWidth;
-                impactEl.classList.add("hit-" + level);
+                const animClass = (level === "heavy") ? "hit-heavy" : "hit-medium";
+                impactEl.classList.add(animClass);
                 impactEl.addEventListener(
                     "animationend",
                     () => {
@@ -1322,6 +1323,13 @@
             // LIGHT   15% — shake + lightning
             // MEDIUM  38% — full medium (no crack)
             // HEAVY   34% — full heavy (no crack)
+            function shouldShowImpact(entry) {
+                if (entry.forceImpact === true)  return true;
+                if (entry.forceImpact === false) return false;
+                if (entry.forceLevel) return true;
+                return Math.random() < entry.impactChance;
+            }
+
             function triggerShock(entry) {
                 const forceLevel = entry.forceLevel;
                 const isLeft = entry.side === "left"  ? true
@@ -1348,6 +1356,7 @@
                 if (level === "none") {
                     logoRestore(true);
                     if (Math.random() > 0.5) showLightning("light"); // mini bolt 50%
+                    if (entry.forceImpact === true) showImpactText("medium", cr, cg, cb);
                     return;
                 }
 
@@ -1356,6 +1365,7 @@
                 if (level === "whisper") {
                     doShake("light");
                     showLightning("light");
+                    if (entry.forceImpact === true) showImpactText("medium", cr, cg, cb);
                     return;
                 }
 
@@ -1363,6 +1373,7 @@
                     doShake("light");
                     showLightning("light");
                     if (Math.random() > 0.5) setTimeout(() => showLightning("light"), 80);
+                    if (entry.forceImpact === true) showImpactText("medium", cr, cg, cb);
                     return;
                 }
 
@@ -1372,10 +1383,8 @@
                     doFlash();
                     doBgFlash("medium");
                     showLightning("medium");
-                    // Impact text 1/3 du temps — sinon ship ou chien
-                    if (forceLevel) {
-                        showImpactText("medium", cr, cg, cb);
-                    } else if (Math.random() < 0.33) {
+                    const wantImpact = shouldShowImpact(entry);
+                    if (wantImpact) {
                         showImpactText("medium", cr, cg, cb);
                     } else if (mi - lastGuestAt >= 2 && Math.random() < 0.45) {
                         if (nextGuest === 'ship') { showSpaceship(); } else { showBgImage(); }
@@ -1393,10 +1402,8 @@
                 doVignette();
                 showLightning("heavy");
                 showStrikeBg();
-                // Impact text 1/3 du temps — sinon ship ou chien
-                if (forceLevel) {
-                    showImpactText("heavy", cr, cg, cb);
-                } else if (Math.random() < 0.33) {
+                const wantImpactHeavy = shouldShowImpact(entry);
+                if (wantImpactHeavy) {
                     showImpactText("heavy", cr, cg, cb);
                 } else if (mi - lastGuestAt >= 2 && Math.random() < 0.45) {
                     if (nextGuest === 'ship') { showSpaceship(); } else { showBgImage(); }
