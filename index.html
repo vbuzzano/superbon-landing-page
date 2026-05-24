@@ -745,6 +745,44 @@
 */
             ];
 
+            // ── Per-entry defaults ────────────────────────────
+            //  Niveau 0 ({ word: "x" }) → toutes ces valeurs s'appliquent.
+            //  Toute clé fournie par l'entrée override le défaut correspondant.
+            const DEFAULTS = {
+                delay:          [700, 600],   // ms : base + random*range entre 2 entrées
+                typeSpeed:      [75, 50],     // ms par char tapé
+                holdBeforeFall: [700, 400],   // ms : mot complet → fall
+                impactChance:   0.33,         // proba impact text si level ≥ medium sans forceLevel
+                guestChance:    0.45,         // proba ship/dog si level ≥ medium sans forceLevel
+            };
+
+            // Background image pool (overridable per-entry via guest.dogImage)
+            const BG_IMAGES_DEFAULT = ["sbdg3.png"];
+
+            function normalizeEntry(raw) {
+                const g = raw.guest || {};
+                return {
+                    word:           raw.word,
+                    delay:          raw.delay          || DEFAULTS.delay,
+                    forceLevel:     raw.forceLevel,                // undefined = aléatoire pondéré
+                    forceImpact:    raw.forceImpact,               // undefined = hérite de forceLevel
+                    impact:         raw.impact         || null,    // null = pool global IMPACT_*
+                    impactChance:   raw.impactChance != null ? raw.impactChance : DEFAULTS.impactChance,
+                    typeSpeed:      raw.typeSpeed      || DEFAULTS.typeSpeed,
+                    holdBeforeFall: raw.holdBeforeFall || DEFAULTS.holdBeforeFall,
+                    side:           raw.side,                      // "left"|"right"|undefined
+                    guest: {
+                        force:          g.force != null ? g.force : null, // "ship"|"dog"|"none"|null
+                        chance:         g.chance != null ? g.chance : DEFAULTS.guestChance,
+                        ignoreCooldown: !!g.ignoreCooldown,
+                        dogImage:       g.dogImage || null,
+                    },
+                    pressureReset:  !!raw.pressureReset,
+                    pressureBoost:  raw.pressureBoost  || 0,
+                    strikeBg:       raw.strikeBg,                  // bool|undefined ; undefined = heavy only
+                };
+            }
+
             const SVG_NS = "http://www.w3.org/2000/svg";
             const el = document.getElementById("typed");
             const terminalEl = el.closest(".terminal") || el.parentElement;
