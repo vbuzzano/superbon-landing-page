@@ -1322,8 +1322,11 @@
             // LIGHT   15% — shake + lightning
             // MEDIUM  38% — full medium (no crack)
             // HEAVY   34% — full heavy (no crack)
-            function triggerShock(forceLevel) {
-                const isLeft = Math.random() > 0.5;
+            function triggerShock(entry) {
+                const forceLevel = entry.forceLevel;
+                const isLeft = entry.side === "left"  ? true
+                             : entry.side === "right" ? false
+                             : Math.random() > 0.5;
                 const [cr, cg, cb] = isLeft ? [90, 225, 255] : [255, 40, 195];
 
                 let level;
@@ -1331,7 +1334,8 @@
                     level = forceLevel;
                     pressure = 0;
                 } else {
-                    const pressureBoost = Math.min(pressure * 0.038, 0.38);
+                    const effectivePressure = pressure + entry.pressureBoost;
+                    const pressureBoost = Math.min(effectivePressure * 0.038, 0.38);
                     const r = Math.random() - pressureBoost;
                     pressure = 0;
                     if      (r < 0.05) level = "none";
@@ -1403,23 +1407,25 @@
 
             // ── Typing loop ────────────────────────────────────
             function fall() {
-                const entry = SEQUENCE[mi];
+                const entry = normalizeEntry(SEQUENCE[mi]);
                 el.style.animation = "fall 0.55s ease-in forwards";
-                triggerShock(entry.forceLevel);
+                triggerShock(entry);
                 setTimeout(() => {
                     el.style.animation = "";
                     el.textContent = "";
                     ci = 0;
                     mi = (mi + 1) % SEQUENCE.length;
                     doNeonSurge();
-                    const [base, range] = entry.delay || [2200, 1800];
+                    const [base, range] = entry.delay;
                     setTimeout(tick, base + Math.random() * range);
                 }, 550);
             }
 
             function tick() {
-                const word = SEQUENCE[mi].word;
+                const entry = normalizeEntry(SEQUENCE[mi]);
+                const word = entry.word;
                 if (ci === 0) {
+                    if (entry.pressureReset) pressure = 0;
                     pressure++;
                     const maxTilt = Math.min(2 + pressure * 0.7, 10);
                     currentTilt = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * maxTilt);
@@ -1433,11 +1439,12 @@
                 ci++;
                 el.textContent = word.slice(0, ci);
                 if (ci === word.length) {
-                    // Mot complet — court moment lisible, puis tombe
-                    setTimeout(fall, 700 + Math.random() * 400);
+                    const [hBase, hRange] = entry.holdBeforeFall;
+                    setTimeout(fall, hBase + Math.random() * hRange);
                     return;
                 }
-                setTimeout(tick, 75 + Math.random() * 50); // vitesse f05
+                const [tBase, tRange] = entry.typeSpeed;
+                setTimeout(tick, tBase + Math.random() * tRange);
             }
 
             setTimeout(tick, 200);
