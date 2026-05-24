@@ -1395,6 +1395,7 @@
                     doShake("light");
                     showLightning("light");
                     if (Math.random() > 0.5) setTimeout(() => showLightning("light"), 80);
+                    if (entry.strikeBg === true) showStrikeBg();
                     if (entry.forceImpact === true) showImpactText("medium", cr, cg, cb);
                     return;
                 }
@@ -1405,6 +1406,7 @@
                     doFlash();
                     doBgFlash("medium");
                     showLightning("medium");
+                    if (entry.strikeBg === true) showStrikeBg();
                     const wantImpact = shouldShowImpact(entry);
                     if (wantImpact) {
                         showImpactText("medium", cr, cg, cb);
@@ -1421,7 +1423,7 @@
                 doBgFlash("heavy");
                 doVignette();
                 showLightning("heavy");
-                showStrikeBg();
+                if (entry.strikeBg !== false) showStrikeBg();
                 const wantImpactHeavy = shouldShowImpact(entry);
                 if (wantImpactHeavy) {
                     showImpactText("heavy", cr, cg, cb);
