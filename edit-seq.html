@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>superbon — éditeur de séquence</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: "Courier New", monospace;
+            background: #0a0a0a;
+            color: rgba(255,255,255,0.85);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ── Preview ─────────────────────────────────────── */
+        #preview {
+            flex-shrink: 0;
+            height: 38vh;
+            min-height: 200px;
+            background: #000;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            position: relative;
+        }
+        #preview-hint {
+            position: absolute;
+            bottom: 10px;
+            font-size: 10px;
+            color: rgba(255,255,255,0.16);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            pointer-events: none;
+            transition: opacity 0.6s;
+        }
+
+        /* ── Logo ────────────────────────────────────────── */
+        #logo-wrap {
+            position: relative;
+            z-index: 63;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #logo-wrap.pump-heavy  { animation: pump-heavy  0.50s linear forwards; }
+        #logo-wrap.pump-medium { animation: pump-medium 0.40s linear forwards; }
+        @keyframes pump-heavy {
+            0%   { animation-timing-function: cubic-bezier(0.04,0,0.08,1); transform: scale(0.82); }
+            10%  { animation-timing-function: cubic-bezier(0.2, 0,0.4, 1); transform: scale(1.38); }
+            100% { transform: scale(1.00); }
+        }
+        @keyframes pump-medium {
+            0%   { animation-timing-function: cubic-bezier(0.04,0,0.08,1); transform: scale(0.82); }
+            12%  { animation-timing-function: cubic-bezier(0.2, 0,0.4, 1); transform: scale(1.22); }
+            100% { transform: scale(1.00); }
+        }
+
+        #logo { width: min(380px, 70vw); display: block; transition: opacity 0.5s ease, filter 0.5s ease; }
+        #logo.shock-light  { animation: shock-light  0.32s ease-out forwards; }
+        #logo.shock-medium { animation: shock-medium 0.44s ease-out forwards; }
+        #logo.shock-heavy  { animation: shock-heavy  0.58s ease-out forwards; }
+        @keyframes shock-light  { 0%{transform:translateX(0) rotate(0deg);filter:brightness(1)} 10%{transform:translateX(-4px) rotate(-0.4deg);filter:brightness(3) saturate(0)} 20%{transform:translateX(4px) rotate(0.4deg);filter:brightness(0.4)} 35%{transform:translateX(-2px) rotate(-0.2deg);filter:brightness(1.6)} 55%{transform:translateX(1px);filter:brightness(1.1)} 100%{transform:translateX(0) rotate(0deg);filter:brightness(1)} }
+        @keyframes shock-medium { 0%{transform:translateX(0) rotate(0deg) skewX(0);filter:brightness(1)} 7%{transform:translateX(-11px) rotate(-2.5deg) skewX(-2deg);filter:brightness(7) saturate(0) blur(0.8px)} 18%{transform:translateX(13px) rotate(3deg) skewX(1.5deg);filter:brightness(0.1)} 40%{transform:translateX(-3px) rotate(-0.6deg);filter:brightness(2.5) saturate(1.5)} 100%{transform:translateX(0) rotate(0deg) skewX(0);filter:brightness(1)} }
+        @keyframes shock-heavy  { 0%{transform:translateX(0) rotate(0deg) skewX(0deg);filter:brightness(1);opacity:1} 5%{transform:translateX(-24px) rotate(-6deg) skewX(-4deg);filter:brightness(16) saturate(0) blur(2.5px);opacity:0.3} 13%{transform:translateX(22px) rotate(6deg) skewX(3deg);filter:brightness(0.04);opacity:1} 32%{transform:translateX(-6px) rotate(-1.5deg);filter:brightness(4) saturate(2)} 100%{transform:translateX(0) rotate(0deg) skewX(0deg);filter:brightness(1);opacity:1} }
+        #logo.neon-surge { animation: neon-surge 0.85s ease-in-out forwards; }
+        @keyframes neon-surge { 0%{filter:brightness(1) saturate(1)} 10%{filter:brightness(2.1) saturate(0.5) hue-rotate(14deg)} 24%{filter:brightness(0.72) saturate(1.5)} 40%{filter:brightness(1.55) saturate(0.85) hue-rotate(-10deg)} 58%{filter:brightness(0.9) saturate(1.15)} 74%{filter:brightness(1.14) saturate(1)} 100%{filter:brightness(1) saturate(1)} }
+
+        /* ── Terminal (word + cursor in preview) ─────────── */
+        .terminal {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            height: 1.3em;
+            font-family: "Courier New", monospace;
+            font-size: clamp(1.1rem, 3.5vw, 1.8rem);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.82);
+            z-index: 65;
+            position: relative;
+        }
+        #typed { display: inline; white-space: nowrap; }
+        .cursor {
+            display: inline-block;
+            width: clamp(7px,1.2vw,11px);
+            height: 0.85em;
+            background: rgba(255,255,255,0.65);
+            flex-shrink: 0;
+            animation: blink 1.1s step-end infinite;
+        }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+        @keyframes fall {
+            0%   { opacity:1; transform:translateY(0);    filter:blur(0); }
+            30%  { opacity:0.6; transform:translateY(40px); filter:blur(1px); }
+            100% { opacity:0; transform:translateY(130px); filter:blur(3px); }
+        }
+
+        /* ── Fixed overlays ──────────────────────────────── */
+        #flash        { position:fixed; inset:0; pointer-events:none; z-index:90; opacity:0; background:#fff; }
+        #flash.pop    { animation: flash-pop 0.14s ease-out forwards; }
+        @keyframes flash-pop { 0%{opacity:1} 30%{opacity:0.7} 100%{opacity:0} }
+
+        #bg-flash { position:fixed; inset:0; pointer-events:none; z-index:51; opacity:0;
+            background: radial-gradient(ellipse 65% 45% at 50% 50%, rgba(160,50,255,0.62) 0%, rgba(80,20,240,0.38) 30%, rgba(20,60,255,0.16) 58%, transparent 80%); }
+        #bg-flash.burst-medium, #bg-flash.burst-heavy { animation: bg-burst 0.38s ease-out forwards; }
+        @keyframes bg-burst { 0%{opacity:1} 12%{opacity:0.88} 100%{opacity:0} }
+
+        #strike-bg { position:fixed; inset:0; pointer-events:none; z-index:60; opacity:0; display:flex; align-items:center; justify-content:center; }
+        #strike-bg img { width:100%; height:100%; object-fit:cover; mix-blend-mode:screen; }
+        #strike-bg.flash { animation: strike-bg-in 0.9s ease-out forwards; }
+        @keyframes strike-bg-in { 0%{opacity:0} 6%{opacity:0.88} 35%{opacity:0.70} 100%{opacity:0} }
+
+        #impact-text { position:fixed; inset:0; pointer-events:none; z-index:88; display:flex; align-items:center; justify-content:center; opacity:0;
+            font-family:"Courier New",monospace; font-size:clamp(2.2rem,9vw,6rem); font-weight:900; text-transform:uppercase; letter-spacing:0.12em; text-align:center; white-space:nowrap; }
+        #impact-text.hit-medium { animation: impact-flash 0.75s cubic-bezier(0.1,0.7,0.3,1) forwards; }
+        #impact-text.hit-heavy  { animation: impact-flash 1s    cubic-bezier(0.1,0.7,0.3,1) forwards; }
+        @keyframes impact-flash { 0%{opacity:1;transform:scale(1.45);filter:brightness(4) blur(3px)} 10%{opacity:1;transform:scale(1);filter:brightness(2) blur(0)} 55%{opacity:0.8;transform:scale(0.97)} 100%{opacity:0;transform:scale(0.9)} }
+
+        #ship-overlay { position:fixed; inset:0; pointer-events:none; z-index:61; opacity:0; display:flex; align-items:center; justify-content:center; }
+        #ship-overlay img { width:min(950px,130vw); height:auto; mix-blend-mode:screen; transform:translateY(-12vh); }
+        #ship-overlay.appear { animation: ship-in 1.75s ease-in-out forwards; }
+        @keyframes ship-in { 0%{opacity:0} 8%{opacity:0.90} 55%{opacity:0.78} 85%{opacity:0.55} 100%{opacity:0} }
+
+        #bg-image-overlay { position:fixed; inset:0; pointer-events:none; z-index:62; opacity:0; display:flex; align-items:center; justify-content:center; }
+        #bg-image-overlay img { width:min(480px,62vw); height:auto; mix-blend-mode:screen; transform:translateY(-18vh); }
+        #bg-image-overlay.appear { animation: bg-image-in 1.0s ease-in-out forwards; }
+        @keyframes bg-image-in { 0%{opacity:0} 8%{opacity:0.82} 55%{opacity:0.70} 100%{opacity:0} }
+
+        #lightning-overlay { position:fixed; inset:0; pointer-events:none; z-index:72; opacity:0; }
+        #lightning-overlay.strike { animation: lightning-out 0.55s ease-out forwards; }
+        @keyframes lightning-out { 0%{opacity:1} 10%{opacity:1} 100%{opacity:0} }
+        #lightning-overlay svg { width:100%; height:100%; }
+
+        #vignette-shock { position:fixed; inset:0; pointer-events:none; z-index:55; opacity:0;
+            background: radial-gradient(ellipse 70% 70% at 50% 50%, transparent 20%, rgba(0,0,0,0.92) 100%); }
+        #vignette-shock.active  { opacity:1; transition:none; }
+        #vignette-shock.fading  { opacity:0; transition:opacity 1.6s ease; }
+
+        #logo-dim { position:fixed; inset:0; pointer-events:none; z-index:64; opacity:0;
+            background: radial-gradient(ellipse 62% 40% at 50% 50%, rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.80) 30%, rgba(0,0,0,0.40) 58%, transparent 78%); }
+        #logo-dim.active { animation: logo-dim-anim 2.0s ease-out forwards; }
+        @keyframes logo-dim-anim { 0%{opacity:1} 8%{opacity:1} 30%{opacity:0.92} 100%{opacity:0} }
+
+        /* ── Editor (z:300 stays above overlays) ─────────── */
+        #editor {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+            z-index: 300;
+            background: #0a0a0a;
+        }
+
+        /* ── Toolbar ────────────────────────────────────── */
+        #toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 11px 18px;
+            background: rgba(10,10,10,0.95);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(8px);
+            gap: 12px;
+        }
+        #toolbar-title { font-size:12px; letter-spacing:0.3em; text-transform:uppercase; color:rgba(255,255,255,0.4); white-space:nowrap; }
+        #toolbar-title strong { color:rgba(255,255,255,0.85); }
+        #toolbar-right { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+        #save-status { font-size:10px; color:rgba(255,255,255,0.3); letter-spacing:0.1em; min-width:80px; text-align:right; }
+
+        .tb-btn {
+            font-family: "Courier New", monospace;
+            font-size: 11px;
+            padding: 6px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.75);
+            letter-spacing: 0.06em;
+            transition: background 0.15s, border-color 0.15s;
+            white-space: nowrap;
+        }
+        .tb-btn:hover { background:rgba(255,255,255,0.12); border-color:rgba(255,255,255,0.35); color:#fff; }
+        .tb-btn.accent { border-color:rgba(80,220,255,0.4); color:rgba(80,220,255,0.9); background:rgba(80,220,255,0.07); }
+        .tb-btn.accent:hover { background:rgba(80,220,255,0.15); border-color:rgba(80,220,255,0.65); }
+
+        /* ── Steps list ─────────────────────────────────── */
+        #steps-list { padding:14px 18px 60px; display:flex; flex-direction:column; gap:8px; }
+        .empty-msg { text-align:center; padding:48px 20px; color:rgba(255,255,255,0.18); font-size:12px; letter-spacing:0.12em; line-height:2; }
+
+        /* ── Step card ──────────────────────────────────── */
+        .step-card { border:1px solid rgba(255,255,255,0.09); border-radius:7px; background:rgba(255,255,255,0.025); overflow:hidden; transition:border-color 0.2s; }
+        .step-card:focus-within { border-color:rgba(255,255,255,0.2); }
+
+        .card-header { display:flex; align-items:center; gap:10px; padding:9px 12px; background:rgba(255,255,255,0.03); border-bottom:1px solid rgba(255,255,255,0.06); }
+        .step-num { font-size:10px; color:rgba(255,255,255,0.2); min-width:16px; text-align:center; }
+        .step-word {
+            flex:1; background:transparent; border:none;
+            border-bottom:1px solid rgba(255,255,255,0.12);
+            color:#fff; font-family:"Courier New",monospace; font-size:17px;
+            letter-spacing:0.18em; text-transform:uppercase; padding:2px 4px;
+            outline:none; transition:border-color 0.2s; min-width:0;
+        }
+        .step-word:focus { border-bottom-color:rgba(255,255,255,0.45); }
+        .step-word::placeholder { color:rgba(255,255,255,0.13); font-size:13px; text-transform:none; letter-spacing:0.05em; }
+
+        .card-actions { display:flex; gap:4px; flex-shrink:0; }
+        .btn-icon { font-family:"Courier New",monospace; font-size:10px; padding:4px 8px; border:1px solid rgba(255,255,255,0.12); border-radius:3px; background:transparent; color:rgba(255,255,255,0.35); cursor:pointer; transition:background 0.12s,color 0.12s,border-color 0.12s; }
+        .btn-icon:hover { background:rgba(255,255,255,0.09); color:rgba(255,255,255,0.8); border-color:rgba(255,255,255,0.3); }
+        .btn-icon:disabled { opacity:0.2; cursor:default; pointer-events:none; }
+        .btn-icon.del:hover { background:rgba(255,60,60,0.12); color:rgba(255,100,100,0.9); border-color:rgba(255,60,60,0.35); }
+
+        .btn-test { font-family:"Courier New",monospace; font-size:11px; padding:4px 13px; border:1px solid rgba(80,220,255,0.35); border-radius:3px; background:rgba(80,220,255,0.07); color:rgba(80,220,255,0.9); cursor:pointer; letter-spacing:0.08em; transition:background 0.12s,border-color 0.12s; }
+        .btn-test:hover  { background:rgba(80,220,255,0.17); border-color:rgba(80,220,255,0.6); }
+        .btn-test:active { background:rgba(80,220,255,0.28); }
+
+        /* ── Card body ──────────────────────────────────── */
+        .card-body { padding:10px 12px 12px; display:flex; flex-direction:column; gap:8px; }
+        .field-row { display:flex; align-items:flex-start; gap:10px; min-height:26px; }
+        .field-label { font-size:9px; letter-spacing:0.22em; text-transform:uppercase; color:rgba(255,255,255,0.28); min-width:105px; flex-shrink:0; line-height:1.4; padding-top:4px; }
+        .field-label .sub { font-size:8px; color:rgba(255,255,255,0.16); text-transform:none; letter-spacing:0.05em; display:block; margin-top:1px; }
+
+        .pills { display:flex; flex-wrap:wrap; gap:4px; }
+        .pill { font-family:"Courier New",monospace; font-size:10px; padding:3px 10px; border:1px solid rgba(255,255,255,0.13); border-radius:20px; background:transparent; color:rgba(255,255,255,0.38); cursor:pointer; letter-spacing:0.04em; transition:all 0.1s; white-space:nowrap; }
+        .pill:hover { border-color:rgba(255,255,255,0.3); color:rgba(255,255,255,0.7); background:rgba(255,255,255,0.05); }
+        .pill.active { border-color:rgba(255,255,255,0.45); color:#fff; background:rgba(255,255,255,0.1); }
+
+        .pill.lv-none.active   { background:rgba(120,120,120,0.18); border-color:rgba(160,160,160,0.5); color:rgba(180,180,180,0.9); }
+        .pill.lv-light.active  { background:rgba(80,210,100,0.15);  border-color:rgba(80,220,100,0.5);  color:rgba(100,230,120,0.95); }
+        .pill.lv-medium.active { background:rgba(240,170,0,0.15);   border-color:rgba(255,190,0,0.5);   color:rgba(255,205,50,0.95); }
+        .pill.lv-heavy.active  { background:rgba(255,60,60,0.15);   border-color:rgba(255,80,80,0.5);   color:rgba(255,110,110,0.95); }
+        .pill.col-blue.active  { background:rgba(90,225,255,0.15);  border-color:rgba(90,225,255,0.5);  color:rgba(90,225,255,0.95); }
+        .pill.col-pink.active  { background:rgba(255,40,195,0.15);  border-color:rgba(255,40,195,0.5);  color:rgba(255,40,195,0.95); }
+
+        .text-input {
+            flex:1; min-width:0; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
+            border-radius:4px; color:rgba(255,255,255,0.8); font-family:"Courier New",monospace;
+            font-size:12px; letter-spacing:0.1em; padding:4px 10px; outline:none; transition:border-color 0.15s;
+        }
+        .text-input:focus { border-color:rgba(255,255,255,0.32); }
+        .text-input::placeholder { color:rgba(255,255,255,0.18); letter-spacing:0.05em; }
+
+        .delay-inputs { display:flex; gap:6px; align-items:center; }
+        .delay-inputs input[type=number] {
+            width:70px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
+            border-radius:4px; color:rgba(255,255,255,0.8); font-family:"Courier New",monospace;
+            font-size:12px; padding:4px 8px; outline:none; transition:border-color 0.15s;
+            -moz-appearance:textfield;
+        }
+        .delay-inputs input[type=number]::-webkit-outer-spin-button,
+        .delay-inputs input[type=number]::-webkit-inner-spin-button { -webkit-appearance:none; }
+        .delay-inputs input[type=number]:focus { border-color:rgba(255,255,255,0.32); }
+        .delay-inputs span { font-size:9px; color:rgba(255,255,255,0.25); letter-spacing:0.1em; }
+
+        .impact-row { display:flex; gap:6px; align-items:center; flex:1; min-width:0; }
+        .impact-tag { font-size:9px; color:rgba(255,255,255,0.28); letter-spacing:0.15em; flex-shrink:0; }
+
+        /* ── Export modal ───────────────────────────────── */
+        #export-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.78); z-index:600; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px); }
+        #export-overlay.hidden { display:none; }
+        #export-box { background:#111; border:1px solid rgba(255,255,255,0.14); border-radius:10px; padding:22px; width:min(620px,92vw); max-height:82vh; display:flex; flex-direction:column; gap:14px; }
+        #export-box h2 { font-size:12px; letter-spacing:0.28em; text-transform:uppercase; color:rgba(255,255,255,0.6); font-weight:normal; }
+        #export-desc { font-size:11px; color:rgba(255,255,255,0.35); line-height:1.7; }
+        #export-desc code { background:rgba(255,255,255,0.08); padding:1px 5px; border-radius:3px; color:rgba(255,255,255,0.65); }
+        #export-code { flex:1; min-height:180px; max-height:38vh; background:#0a0a0a; border:1px solid rgba(255,255,255,0.1); border-radius:5px; color:rgba(255,255,255,0.7); font-family:"Courier New",monospace; font-size:11px; line-height:1.55; padding:12px; resize:none; outline:none; }
+        #export-footer { display:flex; gap:8px; justify-content:flex-end; }
+    </style>
+</head>
+<body>
+
+<!-- Fixed animation overlays -->
+<div id="flash"></div>
+<div id="bg-flash"></div>
+<div id="strike-bg"><img src="sbbgec1.jpg" alt=""></div>
+<div id="impact-text"></div>
+<div id="ship-overlay"><img src="sbspaceship.png" alt=""></div>
+<div id="bg-image-overlay"><img src="" alt=""></div>
+<div id="lightning-overlay"><svg xmlns="http://www.w3.org/2000/svg"><g id="lightning-lines"></g></svg></div>
+<div id="vignette-shock"></div>
+<div id="logo-dim"></div>
+
+<!-- Preview -->
+<div id="preview">
+    <div id="logo-wrap">
+        <img id="logo" src="sblogo.png" alt="superbon">
+    </div>
+    <div class="terminal">
+        <span id="typed"></span>
+        <span class="cursor"></span>
+    </div>
+    <div id="preview-hint">cliquez sur ► Tester pour voir l'animation complète</div>
+</div>
+
+<!-- Editor -->
+<div id="editor">
+    <div id="toolbar">
+        <div id="toolbar-title"><strong>superbon</strong> — séquence</div>
+        <div id="toolbar-right">
+            <span id="save-status"></span>
+            <button class="tb-btn" onclick="addStep()">+ Ajouter un mot</button>
+            <button class="tb-btn accent" onclick="openExport()">Exporter ↗</button>
+        </div>
+    </div>
+    <div id="steps-list"></div>
+</div>
+
+<!-- Export modal -->
+<div id="export-overlay" class="hidden">
+    <div id="export-box">
+        <h2>Exporter la séquence</h2>
+        <p id="export-desc">Copiez ce code et collez-le dans <code>index.html</code> à la place du tableau <code>SEQUENCE</code> existant.</p>
+        <textarea id="export-code" readonly spellcheck="false"></textarea>
+        <div id="export-footer">
+            <button class="tb-btn" onclick="closeExport()">Fermer</button>
+            <button class="tb-btn accent" id="btn-copy" onclick="copyExport()">Copier le code</button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   ANIMATION ENGINE
+   ═══════════════════════════════════════════════════ */
+const DEFAULTS = {
+    delay:[700,600], typeSpeed:[75,50], holdBeforeFall:[700,400],
+    impactChance:0.33, guestChance:0.45,
+};
+function normalizeEntry(raw) {
+    const g = raw.guest || {};
+    return {
+        word: raw.word,
+        delay: raw.delay || DEFAULTS.delay,
+        forceLevel: raw.forceLevel,
+        forceImpact: raw.forceImpact,
+        impact: raw.impact || null,
+        impactChance: raw.impactChance != null ? raw.impactChance : DEFAULTS.impactChance,
+        typeSpeed: raw.typeSpeed || DEFAULTS.typeSpeed,
+        holdBeforeFall: raw.holdBeforeFall || DEFAULTS.holdBeforeFall,
+        side: raw.side,
+        guest: {
+            force: g.force != null ? g.force : null,
+            chance: g.chance != null ? g.chance : DEFAULTS.guestChance,
+            ignoreCooldown: !!g.ignoreCooldown,
+            dogImage: g.dogImage || null,
+        },
+        pressureReset: !!raw.pressureReset,
+        pressureBoost: raw.pressureBoost || 0,
+        strikeBg: raw.strikeBg,
+    };
+}
+
+const SVG_NS      = "http://www.w3.org/2000/svg";
+const logoWrap    = document.getElementById("logo-wrap");
+const logo        = document.getElementById("logo");
+const flashEl     = document.getElementById("flash");
+const lightEl     = document.getElementById("lightning-overlay");
+const lightSvg    = lightEl.querySelector("svg");
+const lightG      = document.getElementById("lightning-lines");
+const vigEl       = document.getElementById("vignette-shock");
+const shipEl      = document.getElementById("ship-overlay");
+const bgFlashEl   = document.getElementById("bg-flash");
+const bgImgEl     = document.getElementById("bg-image-overlay");
+const bgImgTag    = bgImgEl.querySelector("img");
+const impactEl    = document.getElementById("impact-text");
+const strikeBgEl  = document.getElementById("strike-bg");
+const typedEl     = document.getElementById("typed");
+const terminalEl  = document.querySelector(".terminal");
+const BG_IMAGES   = ["sbdg3.png"];
+const IMPACT_MEDIUM = ["CA CLAQUE !", "TROP BON !", "YEAH !", "C'EST BON !", "OUAIS !", "BOOM !", "PULSE !"];
+const IMPACT_HEAVY  = ["SUPERBON !", "CA ENVOIE !", "FULL POWER !", "C'EST SUPERBON !", "VOLTAGE !"];
+
+let shipBusy=false, dogBusy=false, lastGuestAt=-99, nextGuest='ship', pressure=0, mi=0;
+let _lastFiredEntry = null;
+
+function randomLogoEdgePoint(rect, portrait) {
+    const sidePts = [
+        {x:rect.left,  y:rect.top},    {x:rect.right, y:rect.top},
+        {x:rect.left,  y:rect.bottom}, {x:rect.right, y:rect.bottom},
+        {x:rect.left,  y:rect.top+rect.height*.5},
+        {x:rect.right, y:rect.top+rect.height*.5},
+    ];
+    const tbPts = [
+        {x:rect.left+rect.width*.25, y:rect.top},
+        {x:rect.left+rect.width*.5,  y:rect.top},
+        {x:rect.left+rect.width*.75, y:rect.top},
+        {x:rect.left+rect.width*.25, y:rect.bottom},
+        {x:rect.left+rect.width*.5,  y:rect.bottom},
+        {x:rect.left+rect.width*.75, y:rect.bottom},
+    ];
+    const pts = portrait ? tbPts : [...sidePts, ...tbPts];
+    return pts[Math.floor(Math.random() * pts.length)];
+}
+function jaggedLine(x1,y1,x2,y2,steps,dev){const len=Math.hypot(x2-x1,y2-y1);if(len<1)return`${x1},${y1}`;const nx=-(y2-y1)/len,ny=(x2-x1)/len;const pts=[`${x1.toFixed(1)},${y1.toFixed(1)}`];for(let i=1;i<steps;i++){const t=i/steps,jt=(Math.random()-.5)*len*dev;pts.push(`${(x1+(x2-x1)*t+nx*jt).toFixed(1)},${(y1+(y2-y1)*t+ny*jt).toFixed(1)}`);}pts.push(`${x2.toFixed(1)},${y2.toFixed(1)}`);return pts.join(" ");}
+function makePoly(p,pts,sw,col){const pl=document.createElementNS(SVG_NS,"polyline");pl.setAttribute("points",pts);pl.setAttribute("stroke",col);pl.setAttribute("stroke-width",sw);pl.setAttribute("fill","none");pl.setAttribute("stroke-linecap","round");pl.setAttribute("stroke-linejoin","round");p.appendChild(pl);}
+
+function showSpaceship(){if(shipBusy)return;shipBusy=true;shipEl.classList.remove("appear");void shipEl.offsetWidth;shipEl.classList.add("appear");shipEl.addEventListener("animationend",()=>{shipEl.classList.remove("appear");shipBusy=false;},{once:true});}
+function showBgImage(src){if(dogBusy)return;dogBusy=true;bgImgTag.src=src||BG_IMAGES[Math.floor(Math.random()*BG_IMAGES.length)];bgImgEl.classList.remove("appear");void bgImgEl.offsetWidth;bgImgEl.classList.add("appear");bgImgEl.addEventListener("animationend",()=>{bgImgEl.classList.remove("appear");dogBusy=false;},{once:true});}
+function showStrikeBg(){strikeBgEl.classList.remove("flash");void strikeBgEl.offsetWidth;strikeBgEl.classList.add("flash");strikeBgEl.addEventListener("animationend",()=>strikeBgEl.classList.remove("flash"),{once:true});}
+function showImpactText(level,r,g,b){
+    const pool=_lastFiredEntry&&_lastFiredEntry.impact
+        ?(level==="heavy"?_lastFiredEntry.impact.h:_lastFiredEntry.impact.m)
+        :(level==="heavy"?IMPACT_HEAVY:IMPACT_MEDIUM);
+    impactEl.textContent=pool[Math.floor(Math.random()*pool.length)];
+    impactEl.style.color=`rgb(${r},${g},${b})`;
+    impactEl.style.textShadow=`0 0 18px rgba(${r},${g},${b},1),0 0 55px rgba(${r},${g},${b},0.7),0 0 110px rgba(${r},${g},${b},0.35)`;
+    impactEl.className="";void impactEl.offsetWidth;
+    impactEl.classList.add(level==="heavy"?"hit-heavy":"hit-medium");
+    impactEl.addEventListener("animationend",()=>{impactEl.className="";impactEl.textContent="";},{once:true});
+    const ld=document.getElementById("logo-dim");
+    ld.classList.remove("active");void ld.offsetWidth;ld.classList.add("active");
+    ld.addEventListener("animationend",()=>ld.classList.remove("active"),{once:true});
+}
+
+function showLightning(intensity){
+    const W=window.innerWidth,H=window.innerHeight,rect=logo.getBoundingClientRect();
+    lightSvg.setAttribute("viewBox",`0 0 ${W} ${H}`);lightG.innerHTML="";
+    const portrait=window.innerHeight>window.innerWidth*1.2;
+    const{x:ox,y:oy}=randomLogoEdgePoint(rect,portrait);
+    const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+    const baseA=Math.atan2(oy-cy,ox-cx),isLeft=ox<cx;
+    lightSvg.style.filter=isLeft
+        ?"drop-shadow(0 0 4px #fff) drop-shadow(0 0 14px rgba(90,225,255,1)) drop-shadow(0 0 35px rgba(40,190,255,1)) drop-shadow(0 0 70px rgba(20,120,255,.8))"
+        :"drop-shadow(0 0 4px #fff) drop-shadow(0 0 14px rgba(255,40,195,1)) drop-shadow(0 0 35px rgba(240,20,170,1)) drop-shadow(0 0 70px rgba(200,10,150,.8))";
+    const[r,g,b]=isLeft?[90,225,255]:[255,40,195];
+    const count=intensity==="heavy"  ?3+Math.floor(Math.random()*3)
+               :intensity==="medium" ?2+Math.floor(Math.random()*3)
+               :                      1+Math.floor(Math.random()*2);
+    for(let i=0;i<count;i++){
+        const spread=count>1?.85:.3,angle=baseA+(Math.random()-.5)*spread;
+        const dist=Math.max(W,H)*(.35+Math.random()*.45);
+        const tx=ox+Math.cos(angle)*dist,ty=oy+Math.sin(angle)*dist;
+        const steps=8+Math.floor(Math.random()*6),pts=jaggedLine(ox,oy,tx,ty,steps,.2),main=i===0;
+        makePoly(lightG,pts,main?45:25,`rgba(${r},${g},${b},.045)`);
+        makePoly(lightG,pts,main?10:5,`rgba(${r},${g},${b},.18)`);
+        makePoly(lightG,pts,main?.9:.55,"rgba(255,255,255,.95)");
+        if(Math.random()>.38){
+            const bt=.28+Math.random()*.38,bx=ox+(tx-ox)*bt,by_=oy+(ty-oy)*bt;
+            const ba=angle+(Math.random()>.5?1:-1)*(.45+Math.random()*.55),bd=dist*(.18+Math.random()*.22);
+            const bpts=jaggedLine(bx,by_,bx+Math.cos(ba)*bd,by_+Math.sin(ba)*bd,4,.22);
+            makePoly(lightG,bpts,15,`rgba(${r},${g},${b},.04)`);
+            makePoly(lightG,bpts,.4,`rgba(${r},${g},${b},.8)`);
+        }
+    }
+    lightEl.classList.remove("strike");void lightEl.offsetWidth;lightEl.classList.add("strike");
+}
+
+function logoRestore(smooth){
+    if(smooth){logoWrap.style.transition="transform 0.4s ease";logo.style.transition="opacity 0.4s ease, filter 0.4s ease";}
+    else{logoWrap.style.transition="";logo.style.transition="";}
+    logoWrap.style.transform="";logo.style.opacity="";logo.style.filter="";
+}
+function clearLogoDim(){
+    logo.style.transition="";logo.style.opacity="";logo.style.filter="";
+    logoWrap.style.transition="";
+}
+function doShake(l){logo.classList.remove("shock-light","shock-medium","shock-heavy");void logo.offsetWidth;logo.classList.add("shock-"+l);logo.addEventListener("animationend",()=>{logo.classList.remove("shock-light","shock-medium","shock-heavy");},{once:true});}
+function doPump(l){logoWrap.classList.remove("pump-heavy","pump-medium");void logoWrap.offsetWidth;logoWrap.classList.add("pump-"+l);logoWrap.addEventListener("animationend",()=>{logoWrap.classList.remove("pump-heavy","pump-medium");logoWrap.style.transform="";},{once:true});}
+function doFlash(){flashEl.classList.remove("pop");void flashEl.offsetWidth;flashEl.classList.add("pop");}
+function doBgFlash(l){bgFlashEl.classList.remove("burst-medium","burst-heavy");void bgFlashEl.offsetWidth;bgFlashEl.classList.add("burst-"+l);}
+function doVignette(){vigEl.classList.remove("fading");vigEl.classList.add("active");setTimeout(()=>{vigEl.classList.remove("active");vigEl.classList.add("fading");},900);}
+function dispatchGuest(e){const g=e.guest;if(g.force==="none")return;const ok=g.ignoreCooldown||(mi-lastGuestAt>=2);if(!ok)return;let pick=g.force;if(!pick){if(Math.random()>=g.chance)return;pick=nextGuest;nextGuest=nextGuest==='ship'?'dog':'ship';}pick==='ship'?showSpaceship():showBgImage(g.dogImage);lastGuestAt=mi;}
+function shouldShowImpact(e){if(e.forceImpact===true)return true;if(e.forceImpact===false)return false;if(e.forceLevel)return true;return Math.random()<e.impactChance;}
+
+function triggerShock(entry){
+    const fl=entry.forceLevel,isLeft=entry.side==="left"?true:entry.side==="right"?false:Math.random()>.5;
+    const[cr,cg,cb]=isLeft?[90,225,255]:[255,40,195];
+    let level;
+    if(fl){level=fl;pressure=0;}else{const ep=pressure+entry.pressureBoost,pb=Math.min(ep*.038,.38),r=Math.random()-pb;pressure=0;if(r<.05)level="none";else if(r<.13)level="whisper";else if(r<.28)level="light";else if(r<.66)level="medium";else level="heavy";}
+    if(level==="none"){logoRestore(true);if(Math.random()>.5)showLightning("light");if(entry.forceImpact===true)showImpactText("medium",cr,cg,cb);return;}
+    if(level==="whisper"){logoRestore(false);doShake("light");showLightning("light");if(entry.forceImpact===true)showImpactText("medium",cr,cg,cb);return;}
+    if(level==="light"){logoRestore(false);doShake("light");showLightning("light");if(Math.random()>.5)setTimeout(()=>showLightning("light"),80);if(entry.strikeBg===true)showStrikeBg();if(entry.forceImpact===true)showImpactText("medium",cr,cg,cb);return;}
+    if(level==="medium"){const imp=shouldShowImpact(entry);clearLogoDim();doShake("medium");doPump("medium");doFlash();doBgFlash("medium");showLightning("medium");if(entry.strikeBg===true)showStrikeBg();if(imp)showImpactText("medium",cr,cg,cb);if(!imp||(entry.guest.force&&entry.guest.force!=="none"))dispatchGuest(entry);return;}
+    const imp=shouldShowImpact(entry);clearLogoDim();doShake("heavy");doPump("heavy");doFlash();doBgFlash("heavy");doVignette();showLightning("heavy");
+    if(entry.strikeBg!==false)showStrikeBg();
+    if(imp)showImpactText("heavy",cr,cg,cb);if(!imp||(entry.guest.force&&entry.guest.force!=="none"))dispatchGuest(entry);
+}
+
+/* ═══════════════════════════════════════════════════
+   EDITOR
+   ═══════════════════════════════════════════════════ */
+const DEFAULT_STEPS = [
+    { id:1, word:"superbon",    level:"heavy",  showImpact:"always", rotation:-2, typems:75, holdms:700, rythme:3500, impactM:"SUPERBON !",     impactH:"SUPERBON !!!",    guest:"ship", guestImage:"",         side:"left",  strikeBg:"yes" },
+    { id:2, word:"respect.",    level:"medium", showImpact:"",       rotation:-1, typems:75, holdms:700, rythme:2500, impactM:"RESPECT !",      impactH:"RESPECT !!!",     guest:"dog",  guestImage:"sbdg3.png", side:"",      strikeBg:""    },
+    { id:3, word:"vraiment ?!", level:"heavy",  showImpact:"",       rotation:2,  typems:75, holdms:700, rythme:1500, impactM:"VRAIMENT ?!",    impactH:"INCROYABLE !!!",  guest:"",     guestImage:"",         side:"",      strikeBg:""    },
+];
+
+let steps  = loadSteps();
+let nextId = Math.max(0, ...steps.map(s => s.id)) + 1;
+
+function loadSteps() {
+    try {
+        const s = localStorage.getItem("superbon-edit-steps");
+        if (s) {
+            const parsed = JSON.parse(s);
+            // Migrate old format if missing new fields
+            return parsed.map(step => ({
+                rythme:    step.rythme    || step.delayMin  || step.rythmeMin  || 1500,
+                typems:    step.typems    || 75,
+                holdms:    step.holdms    || 700,
+                rotation:  step.rotation  != null ? step.rotation : -1,
+                impactM:   step.impactM   || step.impactText || "",
+                impactH:   step.impactH   || step.impactText || "",
+                guestImage: step.guestImage || "",
+                showImpact: step.showImpact || "",
+                ...step,
+            }));
+        }
+    } catch(e) {}
+    return DEFAULT_STEPS.map(s => ({...s}));
+}
+
+let _saveTimer = null;
+function scheduleSave() {
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(() => {
+        localStorage.setItem("superbon-edit-steps", JSON.stringify(steps));
+        const el = document.getElementById("save-status");
+        el.textContent = "✓ sauvegardé";
+        setTimeout(() => { el.textContent = ""; }, 1800);
+    }, 350);
+}
+
+function addStep() {
+    steps.push({ id:nextId++, word:"", level:"", showImpact:"", rotation:-1, typems:75, holdms:700, rythme:1500, impactM:"", impactH:"", guest:"", guestImage:"", side:"", strikeBg:"" });
+    scheduleSave();
+    renderSteps();
+    setTimeout(() => {
+        const cards = document.querySelectorAll(".step-card");
+        const last  = cards[cards.length - 1];
+        if (last) { last.querySelector(".step-word").focus(); last.scrollIntoView({behavior:"smooth",block:"center"}); }
+    }, 40);
+}
+
+function deleteStep(id) {
+    if (!confirm("Supprimer ce mot de la séquence ?")) return;
+    steps = steps.filter(s => s.id !== id);
+    scheduleSave(); renderSteps();
+}
+
+function moveStep(id, dir) {
+    const i = steps.findIndex(s => s.id === id);
+    const j = i + dir;
+    if (j < 0 || j >= steps.length) return;
+    [steps[i], steps[j]] = [steps[j], steps[i]];
+    scheduleSave(); renderSteps();
+}
+
+function updateField(id, field, value) {
+    const step = steps.find(s => s.id === id);
+    if (step) { step[field] = value; scheduleSave(); }
+}
+
+function setPill(id, field, value, btn) {
+    updateField(id, field, value);
+    btn.closest(".pills").querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+}
+
+function stepToEntry(step) {
+    const entry = { word: step.word || "…" };
+    if (step.level) entry.forceLevel = step.level;
+
+    // Impact: build pool from text (comma-separated = multiple options)
+    const m = step.impactM ? step.impactM.trim() : "";
+    const h = step.impactH ? step.impactH.trim() : "";
+    if (m || h) {
+        entry.impact = {
+            m: m ? m.split(",").map(s => s.trim()).filter(Boolean) : [h],
+            h: h ? h.split(",").map(s => s.trim()).filter(Boolean) : [m],
+        };
+    }
+    // Force impact override
+    if (step.showImpact === "always")      entry.forceImpact = true;
+    else if (step.showImpact === "never")  entry.forceImpact = false;
+    else if (m || h)                       entry.forceImpact = true;
+
+    if (step.guest === "none") entry.guest = { force:"none" };
+    else if (step.guest) entry.guest = { force:step.guest, ignoreCooldown:true, dogImage:step.guestImage||null };
+
+    if (step.side) entry.side = step.side;
+    if (step.strikeBg === "yes") entry.strikeBg = true;
+    if (step.strikeBg === "no")  entry.strikeBg = false;
+    // Rythme (délai entre mots, séquence auto)
+    const rythme = Number(step.rythme) || 1500;
+    entry.delay = [rythme, 0];
+    // Frappe — ms par lettre (visible en Test)
+    const typems = Number(step.typems) || 75;
+    entry.typeSpeed = [typems, 0];
+    // Pause avant impact (visible en Test)
+    const holdms = Number(step.holdms) || 700;
+    entry.holdBeforeFall = [holdms, 0];
+    return entry;
+}
+
+let _testTimer = null;
+function testStep(id) {
+    const step = steps.find(s => s.id === id);
+    if (!step) return;
+    document.getElementById("preview-hint").style.opacity = "0";
+
+    // Cancel any ongoing test
+    clearTimeout(_testTimer);
+    terminalEl.style.animation = "";
+    typedEl.textContent = "";
+
+    const entry = normalizeEntry(stepToEntry(step));
+    _lastFiredEntry = entry;
+
+    const word = step.word || "…";
+    const [tBase, tRange] = entry.typeSpeed;
+    const [hBase, hRange] = entry.holdBeforeFall;
+
+    // Pre-dim logo (same as tick() in index.html)
+    const rot = (step.rotation != null && step.rotation !== "") ? Number(step.rotation) : -1;
+    logo.style.transition     = "";
+    logo.style.opacity        = "0.22";
+    logo.style.filter         = "brightness(0.4) saturate(0.5)";
+    logoWrap.style.transition = "";
+    logoWrap.style.transform  = `scale(0.82) rotate(${rot}deg)`;
+
+    // Type word character by character
+    let ci = 0;
+    function typeNext() {
+        typedEl.textContent = word.slice(0, ++ci);
+        if (ci < word.length) {
+            _testTimer = setTimeout(typeNext, tBase + Math.random() * tRange);
+        } else {
+            // Hold, then fall + shock
+            _testTimer = setTimeout(() => {
+                terminalEl.style.animation = "fall 0.55s ease-in forwards";
+                setTimeout(() => triggerShock(entry), 70);
+                _testTimer = setTimeout(() => {
+                    terminalEl.style.animation = "";
+                    typedEl.textContent = "";
+                }, 620);
+            }, hBase + Math.random() * hRange);
+        }
+    }
+    typeNext();
+}
+
+function esc(str) {
+    return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function pills(stepId, field, opts, cur) {
+    return opts.map(o =>
+        `<button class="pill ${o.cls||""} ${o.val===cur?"active":""}" onclick="setPill(${stepId},'${field}','${o.val}',this)">${o.lbl}</button>`
+    ).join("");
+}
+
+function renderSteps() {
+    const wrap = document.getElementById("steps-list");
+    if (steps.length === 0) {
+        wrap.innerHTML = '<div class="empty-msg">Aucun mot.<br>Cliquez sur « + Ajouter un mot » pour commencer.</div>';
+        return;
+    }
+    wrap.innerHTML = "";
+    steps.forEach((s, i) => {
+        const guestIsShip = s.guest === "ship";
+        const guestIsDog  = s.guest === "dog";
+        const showImage   = guestIsShip || guestIsDog;
+        const card = document.createElement("div");
+        card.className = "step-card";
+        card.innerHTML = `
+<div class="card-header">
+  <span class="step-num">${i+1}</span>
+  <input class="step-word" type="text" placeholder="Mot affiché…"
+    value="${esc(s.word)}" onchange="updateField(${s.id},'word',this.value)">
+  <div class="card-actions">
+    <button class="btn-icon" onclick="moveStep(${s.id},-1)" ${i===0?"disabled":""}>▲</button>
+    <button class="btn-icon" onclick="moveStep(${s.id},1)"  ${i===steps.length-1?"disabled":""}>▼</button>
+    <button class="btn-icon del" onclick="deleteStep(${s.id})">✕</button>
+    <button class="btn-test" onclick="testStep(${s.id})">► Tester</button>
+  </div>
+</div>
+<div class="card-body">
+  <div class="field-row">
+    <span class="field-label">Choc</span>
+    <div class="pills">
+      ${pills(s.id,"level",[
+        {val:"",      lbl:"Aléatoire"},
+        {val:"none",  lbl:"Aucun",  cls:"lv-none"},
+        {val:"light", lbl:"Léger",  cls:"lv-light"},
+        {val:"medium",lbl:"Moyen",  cls:"lv-medium"},
+        {val:"heavy", lbl:"Fort",   cls:"lv-heavy"},
+      ], s.level)}
+    </div>
+  </div>
+  <div class="field-row">
+    <span class="field-label">Rotation<span class="sub">inclinaison pré-choc (°)</span></span>
+    <div class="delay-inputs">
+      <input type="number" min="-10" max="10" step="1" value="${s.rotation != null ? s.rotation : -1}"
+        onchange="updateField(${s.id},'rotation',+this.value)" style="width:62px">
+      <span>°</span>
+      <span style="font-size:9px;color:rgba(255,255,255,0.18)">−10 → +10</span>
+    </div>
+  </div>
+  <div class="field-row">
+    <span class="field-label">Impact moyen<span class="sub">virgule = plusieurs textes</span></span>
+    <div class="impact-row">
+      <span class="impact-tag">M</span>
+      <input type="text" class="text-input" placeholder="Ex : CA CLAQUE !"
+        value="${esc(s.impactM)}" onchange="updateField(${s.id},'impactM',this.value)">
+    </div>
+  </div>
+  <div class="field-row">
+    <span class="field-label">Impact fort</span>
+    <div class="impact-row">
+      <span class="impact-tag">H</span>
+      <input type="text" class="text-input" placeholder="Ex : SUPERBON !!!"
+        value="${esc(s.impactH)}" onchange="updateField(${s.id},'impactH',this.value)">
+    </div>
+  </div>
+  <div class="field-row">
+    <span class="field-label">Forcer impact<span class="sub">afficher le texte impact</span></span>
+    <div class="pills">
+      ${pills(s.id,"showImpact",[
+        {val:"",      lbl:"Auto"},
+        {val:"always",lbl:"Toujours"},
+        {val:"never", lbl:"Jamais"},
+      ], s.showImpact)}
+    </div>
+  </div>
+  <div class="field-row">
+    <span class="field-label">Invité</span>
+    <div class="pills">
+      ${pills(s.id,"guest",[
+        {val:"",    lbl:"Aléatoire"},
+        {val:"ship",lbl:"🚀 Vaisseau"},
+        {val:"dog", lbl:"🐕 Chien"},
+        {val:"none",lbl:"Aucun"},
+      ], s.guest)}
+    </div>
+  </div>
+  ${showImage ? `
+  <div class="field-row">
+    <span class="field-label">Image<span class="sub">fichier du dossier</span></span>
+    <input type="text" class="text-input" placeholder="${guestIsDog ? "sbdg3.png" : "sbspaceship.png"}"
+      value="${esc(s.guestImage)}" onchange="updateField(${s.id},'guestImage',this.value)">
+  </div>` : ""}
+  <div class="field-row">
+    <span class="field-label">Éclairs<span class="sub">couleur neon + texte impact</span></span>
+    <div class="pills">
+      ${pills(s.id,"side",[
+        {val:"",     lbl:"Aléatoire"},
+        {val:"left", lbl:"🔵 Bleu",  cls:"col-blue"},
+        {val:"right",lbl:"🩷 Rose",  cls:"col-pink"},
+      ], s.side)}
+    </div>
+  </div>
+  <div class="field-row">
+    <span class="field-label">Flash fond</span>
+    <div class="pills">
+      ${pills(s.id,"strikeBg",[
+        {val:"",   lbl:"Auto"},
+        {val:"yes",lbl:"Toujours"},
+        {val:"no", lbl:"Jamais"},
+      ], s.strikeBg)}
+    </div>
+  </div>
+  <div class="field-row">
+    <span class="field-label">Timing<span class="sub">visible en ► Tester</span></span>
+    <div class="delay-inputs">
+      <span>Frappe</span>
+      <input type="number" min="10" max="500" step="5" value="${s.typems||75}"
+        onchange="updateField(${s.id},'typems',+this.value)" style="width:62px">
+      <span>ms/car</span>
+      <span style="margin-left:8px">Pause</span>
+      <input type="number" min="100" max="5000" step="50" value="${s.holdms||700}"
+        onchange="updateField(${s.id},'holdms',+this.value)" style="width:72px">
+      <span>ms</span>
+    </div>
+  </div>
+  <div class="field-row">
+    <span class="field-label">Rythme<span class="sub">pause entre mots (auto)</span></span>
+    <div class="delay-inputs">
+      <input type="number" min="0" max="15000" step="100" value="${s.rythme||1500}"
+        onchange="updateField(${s.id},'rythme',+this.value)" style="width:80px">
+      <span>ms</span>
+    </div>
+  </div>
+</div>`;
+        wrap.appendChild(card);
+    });
+}
+
+/* ── Export ──────────────────────────────────────────────── */
+function generateCode() {
+    const entries = steps.map(stepToEntry);
+    return "const SEQUENCE = " + JSON.stringify(entries, null, 2) + ";";
+}
+function openExport() {
+    document.getElementById("export-code").value = generateCode();
+    document.getElementById("export-overlay").classList.remove("hidden");
+}
+function closeExport() {
+    document.getElementById("export-overlay").classList.add("hidden");
+}
+function copyExport() {
+    const btn = document.getElementById("btn-copy");
+    navigator.clipboard.writeText(document.getElementById("export-code").value)
+        .then(() => { btn.textContent="✓ Copié !"; setTimeout(()=>{btn.textContent="Copier le code";},2000); })
+        .catch(() => { document.getElementById("export-code").select(); document.execCommand("copy"); });
+}
+document.getElementById("export-overlay").addEventListener("click", e => {
+    if (e.target === e.currentTarget) closeExport();
+});
+
+renderSteps();
+</script>
+</body>
+</html>

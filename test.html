@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>superbon — test bench</title>
+        <link rel="icon" type="image/png" href="sblgs.png" />
+        <style>
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            html,
+            body {
+                width: 100%;
+                height: 100%;
+                background: #000;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 2rem;
+            }
+
+            /* ── Logo wrapper (pump scale) ── */
+            #logo-wrap {
+                position: relative;
+                z-index: 63;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            #logo-wrap.pump-heavy {
+                animation: pump-heavy 0.50s linear forwards;
+            }
+            #logo-wrap.pump-medium {
+                animation: pump-medium 0.40s linear forwards;
+            }
+
+            @keyframes pump-heavy {
+                0%   { animation-timing-function: cubic-bezier(0.04,0,0.08,1); transform: scale(0.82); }
+                10%  { animation-timing-function: cubic-bezier(0.2, 0,0.4, 1); transform: scale(1.38); }
+                100% { transform: scale(1.00); }
+            }
+            @keyframes pump-medium {
+                0%   { animation-timing-function: cubic-bezier(0.04,0,0.08,1); transform: scale(0.82); }
+                12%  { animation-timing-function: cubic-bezier(0.2, 0,0.4, 1); transform: scale(1.22); }
+                100% { transform: scale(1.00); }
+            }
+
+            /* ── Logo ── */
+            #logo {
+                width: min(700px, 88vw);
+                display: block;
+                transition:
+                    opacity 0.5s ease,
+                    filter 0.5s ease;
+            }
+
+            /* ── Logo shock ── */
+            #logo.shock-light { animation: shock-light 0.32s ease-out forwards; }
+            #logo.shock-medium { animation: shock-medium 0.44s ease-out forwards; }
+            #logo.shock-heavy { animation: shock-heavy 0.58s ease-out forwards; }
+
+            @keyframes shock-light {
+                0% { transform: translateX(0) rotate(0deg); filter: brightness(1); }
+                10% { transform: translateX(-4px) rotate(-0.4deg); filter: brightness(3) saturate(0); }
+                20% { transform: translateX(4px) rotate(0.4deg); filter: brightness(0.4); }
+                35% { transform: translateX(-2px) rotate(-0.2deg); filter: brightness(1.6); }
+                55% { transform: translateX(1px); filter: brightness(1.1); }
+                100% { transform: translateX(0) rotate(0deg); filter: brightness(1); }
+            }
+            @keyframes shock-medium {
+                0%   { transform: translateX(0) rotate(0deg) skewX(0); filter: brightness(1); }
+                7%   { transform: translateX(-11px) rotate(-2.5deg) skewX(-2deg); filter: brightness(7) saturate(0) blur(0.8px); }
+                18%  { transform: translateX(13px) rotate(3deg) skewX(1.5deg); filter: brightness(0.1); }
+                40%  { transform: translateX(-3px) rotate(-0.6deg); filter: brightness(2.5) saturate(1.5); }
+                100% { transform: translateX(0) rotate(0deg) skewX(0); filter: brightness(1); }
+            }
+            @keyframes shock-heavy {
+                0%   { transform: translateX(0) rotate(0deg) skewX(0deg); filter: brightness(1); opacity:1; }
+                5%   { transform: translateX(-24px) rotate(-6deg) skewX(-4deg); filter: brightness(16) saturate(0) blur(2.5px); opacity:0.3; }
+                13%  { transform: translateX(22px) rotate(6deg) skewX(3deg); filter: brightness(0.04); opacity:1; }
+                32%  { transform: translateX(-6px) rotate(-1.5deg); filter: brightness(4) saturate(2); }
+                100% { transform: translateX(0) rotate(0deg) skewX(0deg); filter: brightness(1); opacity:1; }
+            }
+
+            /* ── Word + cursor ── */
+            .terminal {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                height: 1.3em;
+                overflow: visible;
+                font-family: "Courier New", monospace;
+                font-size: clamp(1.6rem, 5vw, 2.8rem);
+                letter-spacing: 0.2em;
+                text-transform: uppercase;
+                color: rgba(255, 255, 255, 0.82);
+            }
+            #typed { display: inline; white-space: nowrap; }
+            .cursor {
+                display: inline-block;
+                width: clamp(9px, 1.5vw, 15px);
+                height: 0.85em;
+                background: rgba(255, 255, 255, 0.75);
+                flex-shrink: 0;
+                animation: blink 1.1s step-end infinite;
+            }
+            @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+            @keyframes fall {
+                0% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+                30% { opacity: 0.6; transform: translateY(40px); filter: blur(1px); }
+                100% { opacity: 0; transform: translateY(130px); filter: blur(3px); }
+            }
+
+            /* ── Screen flash ── */
+            #flash { position: fixed; inset: 0; pointer-events: none; z-index: 90; opacity: 0; background: #fff; }
+            #flash.pop { animation: flash-pop 0.14s ease-out forwards; }
+            @keyframes flash-pop { 0% { opacity: 1; } 30% { opacity: 0.7; } 100% { opacity: 0; } }
+
+            /* ── Spaceship ── */
+            #ship-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 61; opacity: 0; display: flex; align-items: center; justify-content: center; }
+            #ship-overlay img { width: min(950px, 130vw); height: auto; mix-blend-mode: screen; transform: translateY(-12vh); }
+            @media (max-width: 768px) { #ship-overlay img { transform: translateY(-5vh); } }
+            #ship-overlay.appear { animation: ship-in 1.75s ease-in-out forwards; }
+            @keyframes ship-in { 0% { opacity: 0; } 8% { opacity: 0.90; } 55% { opacity: 0.78; } 85% { opacity: 0.55; } 100% { opacity: 0; } }
+
+            /* ── Lightning ── */
+            #lightning-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 72; opacity: 0; }
+            #lightning-overlay.strike { animation: lightning-out 0.55s ease-out forwards; }
+            @keyframes lightning-out { 0% { opacity: 1; } 10% { opacity: 1; } 100% { opacity: 0; } }
+            #lightning-overlay svg { width: 100%; height: 100%; }
+
+            /* ── Glass crack ── */
+            #glass-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 70; opacity: 0; }
+            #glass-overlay.strike { animation: glass-out 3.2s ease-out forwards; }
+            @keyframes glass-out { 0% { opacity: 1; } 18% { opacity: 0.92; } 60% { opacity: 0.38; } 100% { opacity: 0; } }
+            #glass-overlay svg { width: 100%; height: 100%; }
+
+            /* ── Background image (dogs) ── */
+            #bg-image-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 62; opacity: 0; display: flex; align-items: center; justify-content: center; }
+            #bg-image-overlay img { width: min(480px, 62vw); height: auto; mix-blend-mode: screen; transform: translateY(-18vh); }
+            @media (max-width: 768px) { #bg-image-overlay img { transform: translateY(-8vh); } }
+            #bg-image-overlay.appear { animation: bg-image-in 1.0s ease-in-out forwards; }
+            @keyframes bg-image-in { 0% { opacity: 0; } 8% { opacity: 0.82; } 55% { opacity: 0.70; } 100% { opacity: 0; } }
+
+            /* ── Logo dim ── */
+            #logo-dim { position: fixed; inset: 0; pointer-events: none; z-index: 64; opacity: 0;
+                background: radial-gradient(ellipse 62% 40% at 50% 50%, rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.80) 30%, rgba(0,0,0,0.40) 58%, transparent 78%); }
+            #logo-dim.active { animation: logo-dim-anim 2.0s ease-out forwards; }
+            @keyframes logo-dim-anim { 0% { opacity: 1; } 8% { opacity: 1; } 30% { opacity: 0.92; } 100% { opacity: 0; } }
+
+            /* ── Vignette ── */
+            #vignette-shock { position: fixed; inset: 0; pointer-events: none; z-index: 55; opacity: 0;
+                background: radial-gradient(ellipse 70% 70% at 50% 50%, transparent 20%, rgba(0, 0, 0, 0.92) 100%); }
+            #vignette-shock.active { opacity: 1; transition: none; }
+            #vignette-shock.fading { opacity: 0; transition: opacity 1.6s ease; }
+
+            /* ── Bg neon burst ── */
+            #bg-flash { position: fixed; inset: 0; pointer-events: none; z-index: 51; opacity: 0;
+                background: radial-gradient(ellipse 65% 45% at 50% 50%, rgba(160, 50, 255, 0.62) 0%, rgba(80, 20, 240, 0.38) 30%, rgba(20, 60, 255, 0.16) 58%, transparent 80%); }
+            #bg-flash.burst-medium { animation: bg-burst 0.38s ease-out forwards; }
+            #bg-flash.burst-heavy { animation: bg-burst 0.38s ease-out forwards; }
+            @keyframes bg-burst { 0% { opacity: 1; } 12% { opacity: 0.88; } 100% { opacity: 0; } }
+
+            /* ── Impact text ── */
+            #impact-text { position: fixed; inset: 0; pointer-events: none; z-index: 88; display: flex; align-items: center; justify-content: center; opacity: 0;
+                font-family: "Courier New", monospace; font-size: clamp(2.2rem, 9vw, 6rem); font-weight: 900; text-transform: uppercase; letter-spacing: 0.12em; text-align: center; white-space: nowrap; }
+            #impact-text.hit-medium { animation: impact-flash 0.75s cubic-bezier(0.1, 0.7, 0.3, 1) forwards; }
+            #impact-text.hit-heavy { animation: impact-flash 1s cubic-bezier(0.1, 0.7, 0.3, 1) forwards; }
+            @keyframes impact-flash {
+                0% { opacity: 1; transform: scale(1.45); filter: brightness(4) blur(3px); }
+                10% { opacity: 1; transform: scale(1); filter: brightness(2) blur(0px); }
+                55% { opacity: 0.8; transform: scale(0.97); }
+                100% { opacity: 0; transform: scale(0.9); }
+            }
+            #logo.neon-surge { animation: neon-surge 0.85s ease-in-out forwards; }
+            @keyframes neon-surge {
+                0% { filter: brightness(1) saturate(1); }
+                10% { filter: brightness(2.1) saturate(0.5) hue-rotate(14deg); }
+                24% { filter: brightness(0.72) saturate(1.5); }
+                40% { filter: brightness(1.55) saturate(0.85) hue-rotate(-10deg); }
+                58% { filter: brightness(0.9) saturate(1.15); }
+                74% { filter: brightness(1.14) saturate(1); }
+                100% { filter: brightness(1) saturate(1); }
+            }
+
+            /* ── Strike background ── */
+            #strike-bg { position: fixed; inset: 0; pointer-events: none; z-index: 60; opacity: 0; display: flex; align-items: center; justify-content: center; }
+            #strike-bg img { width: 100%; height: 100%; object-fit: cover; mix-blend-mode: screen; }
+            #strike-bg.flash { animation: strike-bg-in 0.9s ease-out forwards; }
+            @keyframes strike-bg-in { 0% { opacity: 0; } 6% { opacity: 0.88; } 35% { opacity: 0.70; } 100% { opacity: 0; } }
+
+            /* ═══════════════════════════════════════════════════════
+               TEST BENCH — button bar
+               ═══════════════════════════════════════════════════════ */
+            #test-bar {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 200;
+                background: rgba(0, 0, 0, 0.88);
+                border-top: 1px solid rgba(255, 255, 255, 0.12);
+                padding: 10px 16px 14px;
+                overflow-y: auto;
+                max-height: 45vh;
+                backdrop-filter: blur(12px);
+            }
+            #test-bar h3 {
+                font-family: "Courier New", monospace;
+                font-size: 10px;
+                text-transform: uppercase;
+                letter-spacing: 0.3em;
+                color: rgba(255, 255, 255, 0.35);
+                margin: 8px 0 5px;
+            }
+            #test-bar h3:first-child { margin-top: 0; }
+            .btn-row {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+            .btn-row button {
+                font-family: "Courier New", monospace;
+                font-size: 11px;
+                padding: 5px 10px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 4px;
+                background: rgba(255, 255, 255, 0.06);
+                color: rgba(255, 255, 255, 0.78);
+                cursor: pointer;
+                transition: background 0.15s, border-color 0.15s;
+                white-space: nowrap;
+            }
+            .btn-row button:hover {
+                background: rgba(255, 255, 255, 0.15);
+                border-color: rgba(255, 255, 255, 0.4);
+            }
+            .btn-row button:active {
+                background: rgba(255, 255, 255, 0.25);
+            }
+            .btn-row button.blue {
+                border-color: rgba(90, 225, 255, 0.4);
+                color: rgba(90, 225, 255, 0.9);
+            }
+            .btn-row button.blue:hover { background: rgba(90, 225, 255, 0.15); }
+            .btn-row button.pink {
+                border-color: rgba(255, 40, 195, 0.4);
+                color: rgba(255, 40, 195, 0.9);
+            }
+            .btn-row button.pink:hover { background: rgba(255, 40, 195, 0.15); }
+            .btn-row button.green {
+                border-color: rgba(80, 255, 120, 0.4);
+                color: rgba(80, 255, 120, 0.9);
+            }
+            .btn-row button.green:hover { background: rgba(80, 255, 120, 0.15); }
+            .btn-row button.gold {
+                border-color: rgba(255, 200, 40, 0.4);
+                color: rgba(255, 200, 40, 0.9);
+            }
+            .btn-row button.gold:hover { background: rgba(255, 200, 40, 0.15); }
+
+            /* ── Last fired info ── */
+            #last-fired {
+                position: fixed;
+                top: 12px;
+                right: 16px;
+                z-index: 200;
+                font-family: "Courier New", monospace;
+                font-size: 11px;
+                color: rgba(255, 255, 255, 0.35);
+                text-align: right;
+                pointer-events: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="flash"></div>
+        <div id="bg-flash"></div>
+        <div id="strike-bg"><img src="sbbgec1.jpg" alt=""></div>
+
+        <div id="impact-text"></div>
+        <div id="hint-text"></div>
+
+        <div id="ship-overlay"><img src="sbspaceship.png" alt="" /></div>
+        <div id="bg-image-overlay"><img src="" alt="" /></div>
+
+        <div id="lightning-overlay">
+            <svg xmlns="http://www.w3.org/2000/svg"><g id="lightning-lines"></g></svg>
+        </div>
+        <div id="glass-overlay">
+            <svg xmlns="http://www.w3.org/2000/svg"><g id="glass-lines"></g></svg>
+        </div>
+
+        <div id="vignette-shock"></div>
+        <div id="logo-dim"></div>
+
+        <div id="logo-wrap">
+            <img id="logo" src="sblogo.png" alt="superbon" />
+        </div>
+
+        <div class="terminal">
+            <span id="typed"></span>
+            <span class="cursor"></span>
+        </div>
+
+        <div id="last-fired"></div>
+
+        <!-- ═══════════════ TEST BAR ═══════════════ -->
+        <div id="test-bar">
+            <h3>shock levels</h3>
+            <div class="btn-row">
+                <button onclick="fire({forceLevel:'none'})">none</button>
+                <button onclick="fire({forceLevel:'whisper'})">whisper</button>
+                <button onclick="fire({forceLevel:'light'})">light</button>
+                <button onclick="fire({forceLevel:'medium'})">medium</button>
+                <button onclick="fire({forceLevel:'heavy'})">heavy</button>
+            </div>
+
+            <h3>side (color)</h3>
+            <div class="btn-row">
+                <button class="blue" onclick="fire({forceLevel:'heavy', side:'left'})">heavy left (blue)</button>
+                <button class="pink" onclick="fire({forceLevel:'heavy', side:'right'})">heavy right (pink)</button>
+                <button class="blue" onclick="fire({forceLevel:'medium', side:'left'})">medium left</button>
+                <button class="pink" onclick="fire({forceLevel:'medium', side:'right'})">medium right</button>
+            </div>
+
+            <h3>forceImpact (on any level)</h3>
+            <div class="btn-row">
+                <button class="gold" onclick="fire({forceLevel:'none', forceImpact:true, impact:{m:['IMPACT ON NONE !'],h:['IMPACT ON NONE !']}})">none + impact</button>
+                <button class="gold" onclick="fire({forceLevel:'whisper', forceImpact:true, impact:{m:['WHISPER HIT !'],h:['WHISPER HIT !']}})">whisper + impact</button>
+                <button class="gold" onclick="fire({forceLevel:'light', forceImpact:true, impact:{m:['LIGHT HIT !'],h:['LIGHT HIT !']}})">light + impact</button>
+                <button class="gold" onclick="fire({forceLevel:'medium', forceImpact:true, impact:{m:['MEDIUM HIT !'],h:['MEDIUM HIT !']}})">medium + impact</button>
+                <button class="gold" onclick="fire({forceLevel:'heavy', forceImpact:true, impact:{m:['HEAVY HIT !'],h:['HEAVY HIT !']}})">heavy + impact</button>
+            </div>
+
+            <h3>impact suppressed (heavy sans impact)</h3>
+            <div class="btn-row">
+                <button onclick="fire({forceLevel:'heavy', forceImpact:false})">heavy, no impact</button>
+                <button onclick="fire({forceLevel:'medium', forceImpact:false})">medium, no impact</button>
+            </div>
+
+            <h3>guests</h3>
+            <div class="btn-row">
+                <button class="green" onclick="fire({forceLevel:'heavy', forceImpact:false, guest:{force:'ship', ignoreCooldown:true}})">ship (heavy)</button>
+                <button class="green" onclick="fire({forceLevel:'medium', forceImpact:false, guest:{force:'ship', ignoreCooldown:true}})">ship (medium)</button>
+                <button class="green" onclick="fire({forceLevel:'heavy', forceImpact:false, guest:{force:'dog', ignoreCooldown:true}})">dog (heavy)</button>
+                <button class="green" onclick="fire({forceLevel:'medium', forceImpact:false, guest:{force:'dog', ignoreCooldown:true}})">dog (medium)</button>
+                <button class="green" onclick="fire({forceLevel:'heavy', forceImpact:false, guest:{force:'dog', ignoreCooldown:true, dogImage:'sbdg3.png'}})">dog custom img</button>
+                <button onclick="fire({forceLevel:'medium', guest:{force:'none'}})">guest blocked</button>
+            </div>
+
+            <h3>strikeBg override</h3>
+            <div class="btn-row">
+                <button onclick="fire({forceLevel:'medium', strikeBg:true})">strikeBg on medium</button>
+                <button onclick="fire({forceLevel:'light', strikeBg:true})">strikeBg on light</button>
+                <button onclick="fire({forceLevel:'heavy', strikeBg:false})">heavy WITHOUT strikeBg</button>
+            </div>
+
+            <h3>combos</h3>
+            <div class="btn-row">
+                <button class="blue" onclick="fire({forceLevel:'heavy', side:'left', forceImpact:false, guest:{force:'ship', ignoreCooldown:true}, strikeBg:true, pressureReset:true, impact:{m:['SUPERBON !'],h:['SUPERBON !!!']}})">SUPERBON (ship+left+strikeBg)</button>
+                <button class="pink" onclick="fire({forceLevel:'heavy', side:'right', forceImpact:true, impact:{m:['FULL POWER !'],h:['FULL POWER !!!']}, strikeBg:true})">full power (right+impact+strikeBg)</button>
+                <button class="gold" onclick="fire({forceImpact:true, impact:{m:['RANDOM LEVEL !'],h:['RANDOM LEVEL !']}})">random level + forced impact</button>
+                <button class="green" onclick="fire({forceLevel:'light', forceImpact:true, side:'left', strikeBg:true, guest:{force:'dog', ignoreCooldown:true}, impact:{m:['EVERYTHING ON LIGHT !'],h:['EVERYTHING ON LIGHT !']}})">everything on light</button>
+            </div>
+
+            <h3>pressure</h3>
+            <div class="btn-row">
+                <button onclick="fire({pressureBoost:20})">random + pressureBoost 20 (bias heavy)</button>
+                <button onclick="fire({pressureReset:true})">random + pressureReset</button>
+                <button onclick="for(let i=0;i<6;i++) setTimeout(()=>fire({}), i*120)">6x rapid random (pressure build)</button>
+            </div>
+        </div>
+
+        <script>
+            /* ═══════════════════════════════════════════════════════
+               ENGINE — same as index.html (no auto-typing loop)
+               ═══════════════════════════════════════════════════════ */
+
+            const SEQUENCE = [
+              { word: "test", impact: { m: ["TEST !"], h: ["TEST !!!"] } }
+            ];
+
+            const DEFAULTS = {
+                delay:          [700, 600],
+                typeSpeed:      [75, 50],
+                holdBeforeFall: [700, 400],
+                impactChance:   0.33,
+                guestChance:    0.45,
+            };
+
+            const BG_IMAGES_DEFAULT = ["sbdg3.png"];
+
+            function normalizeEntry(raw) {
+                const g = raw.guest || {};
+                return {
+                    word:           raw.word,
+                    delay:          raw.delay          || DEFAULTS.delay,
+                    forceLevel:     raw.forceLevel,
+                    forceImpact:    raw.forceImpact,
+                    impact:         raw.impact         || null,
+                    impactChance:   raw.impactChance != null ? raw.impactChance : DEFAULTS.impactChance,
+                    typeSpeed:      raw.typeSpeed      || DEFAULTS.typeSpeed,
+                    holdBeforeFall: raw.holdBeforeFall || DEFAULTS.holdBeforeFall,
+                    side:           raw.side,
+                    guest: {
+                        force:          g.force != null ? g.force : null,
+                        chance:         g.chance != null ? g.chance : DEFAULTS.guestChance,
+                        ignoreCooldown: !!g.ignoreCooldown,
+                        dogImage:       g.dogImage || null,
+                    },
+                    pressureReset:  !!raw.pressureReset,
+                    pressureBoost:  raw.pressureBoost  || 0,
+                    strikeBg:       raw.strikeBg,
+                };
+            }
+
+            const SVG_NS = "http://www.w3.org/2000/svg";
+            const el = document.getElementById("typed");
+            const terminalEl = el.closest(".terminal") || el.parentElement;
+            const logoWrap = document.getElementById("logo-wrap");
+            const logo = document.getElementById("logo");
+            const flashEl = document.getElementById("flash");
+            const lightEl = document.getElementById("lightning-overlay");
+            const lightSvg = lightEl.querySelector("svg");
+            const lightG = document.getElementById("lightning-lines");
+            const glassEl = document.getElementById("glass-overlay");
+            const glassSvg = glassEl.querySelector("svg");
+            const glassG = document.getElementById("glass-lines");
+            const vigEl = document.getElementById("vignette-shock");
+            let mi = 0,
+                ci = 0,
+                pressure = 0,
+                currentTilt = 0;
+
+            // ── Helpers ────────────────────────────────────────
+
+            function randomLogoEdgePoint(rect, portrait) {
+                const sidePts = [
+                    { x: rect.left,  y: rect.top },
+                    { x: rect.right, y: rect.top },
+                    { x: rect.left,  y: rect.bottom },
+                    { x: rect.right, y: rect.bottom },
+                    { x: rect.left,  y: rect.top + rect.height * 0.5 },
+                    { x: rect.right, y: rect.top + rect.height * 0.5 },
+                ];
+                const tbPts = [
+                    { x: rect.left + rect.width * 0.25, y: rect.top },
+                    { x: rect.left + rect.width * 0.5,  y: rect.top },
+                    { x: rect.left + rect.width * 0.75, y: rect.top },
+                    { x: rect.left + rect.width * 0.25, y: rect.bottom },
+                    { x: rect.left + rect.width * 0.5,  y: rect.bottom },
+                    { x: rect.left + rect.width * 0.75, y: rect.bottom },
+                ];
+                const pts = portrait ? tbPts : [...sidePts, ...tbPts];
+                return pts[Math.floor(Math.random() * pts.length)];
+            }
+
+            function jaggedLine(x1, y1, x2, y2, steps, deviation) {
+                const len = Math.hypot(x2 - x1, y2 - y1);
+                if (len < 1) return `${x1},${y1}`;
+                const nx = -(y2 - y1) / len;
+                const ny = (x2 - x1) / len;
+                const pts = [`${x1.toFixed(1)},${y1.toFixed(1)}`];
+                for (let i = 1; i < steps; i++) {
+                    const t = i / steps;
+                    const jt = (Math.random() - 0.5) * len * deviation;
+                    pts.push(
+                        `${(x1 + (x2 - x1) * t + nx * jt).toFixed(1)},` +
+                            `${(y1 + (y2 - y1) * t + ny * jt).toFixed(1)}`,
+                    );
+                }
+                pts.push(`${x2.toFixed(1)},${y2.toFixed(1)}`);
+                return pts.join(" ");
+            }
+
+            function makePoly(parent, pts, sw, color) {
+                const pl = document.createElementNS(SVG_NS, "polyline");
+                pl.setAttribute("points", pts);
+                pl.setAttribute("stroke", color);
+                pl.setAttribute("stroke-width", sw);
+                pl.setAttribute("fill", "none");
+                pl.setAttribute("stroke-linecap", "round");
+                pl.setAttribute("stroke-linejoin", "round");
+                parent.appendChild(pl);
+            }
+
+            function makePath(parent, d, sw, color) {
+                const p = document.createElementNS(SVG_NS, "path");
+                p.setAttribute("d", d);
+                p.setAttribute("stroke", color);
+                p.setAttribute("stroke-width", sw);
+                p.setAttribute("fill", "none");
+                p.setAttribute("stroke-linecap", "round");
+                parent.appendChild(p);
+            }
+
+            // ── Spaceship / Dogs ──────────────────────────────
+            const shipEl = document.getElementById("ship-overlay");
+            const bgFlashEl = document.getElementById("bg-flash");
+            const bgImgEl = document.getElementById("bg-image-overlay");
+            const bgImgTag = bgImgEl.querySelector("img");
+            const impactEl = document.getElementById("impact-text");
+            const BG_IMAGES = ["sbdg3.png"];
+            let shipBusy = false;
+            let lastGuestAt = -99;
+            let nextGuest = Math.random() < 0.5 ? 'ship' : 'dog';
+            let dogBusy = false;
+            const strikeBgEl = document.getElementById("strike-bg");
+
+            const IMPACT_MEDIUM = [
+                "CA CLAQUE !", "TROP BON !", "YEAH !", "C'EST BON !",
+                "OUAIS !", "BOOM !", "PULSE !", "BANG !", "GROOVE !",
+            ];
+            const IMPACT_HEAVY = [
+                "SUPERBON !", "CA ENVOIE !", "FULL POWER !",
+                "C'EST SUPERBON !", "SUPERBON !!!", "VOLTAGE !",
+            ];
+
+            function showSpaceship() {
+                if (shipBusy) return;
+                shipBusy = true;
+                shipEl.classList.remove("appear");
+                void shipEl.offsetWidth;
+                shipEl.classList.add("appear");
+                shipEl.addEventListener("animationend", () => {
+                    shipEl.classList.remove("appear");
+                    shipBusy = false;
+                }, { once: true });
+            }
+
+            function showBgImage(overrideSrc) {
+                if (dogBusy) return;
+                dogBusy = true;
+                bgImgTag.src = overrideSrc
+                    || BG_IMAGES[Math.floor(Math.random() * BG_IMAGES.length)];
+                bgImgEl.classList.remove("appear");
+                void bgImgEl.offsetWidth;
+                bgImgEl.classList.add("appear");
+                bgImgEl.addEventListener("animationend", () => {
+                    bgImgEl.classList.remove("appear");
+                    dogBusy = false;
+                }, { once: true });
+            }
+
+            function showStrikeBg() {
+                strikeBgEl.classList.remove("flash");
+                void strikeBgEl.offsetWidth;
+                strikeBgEl.classList.add("flash");
+                strikeBgEl.addEventListener("animationend",
+                    () => strikeBgEl.classList.remove("flash"), { once: true });
+            }
+
+            function showImpactText(level, r, g, b) {
+                const entry = normalizeEntry(SEQUENCE[mi]);
+                const pool = _lastFiredEntry && _lastFiredEntry.impact
+                    ? (level === "heavy" ? _lastFiredEntry.impact.h : _lastFiredEntry.impact.m)
+                    : (level === "heavy" ? IMPACT_HEAVY : IMPACT_MEDIUM);
+                impactEl.textContent =
+                    pool[Math.floor(Math.random() * pool.length)];
+                impactEl.style.color = `rgb(${r},${g},${b})`;
+                impactEl.style.textShadow = `0 0 18px rgba(${r},${g},${b},1), 0 0 55px rgba(${r},${g},${b},0.7), 0 0 110px rgba(${r},${g},${b},0.35)`;
+                impactEl.className = "";
+                void impactEl.offsetWidth;
+                const animClass = (level === "heavy") ? "hit-heavy" : "hit-medium";
+                impactEl.classList.add(animClass);
+                impactEl.addEventListener("animationend", () => {
+                    impactEl.className = "";
+                    impactEl.textContent = "";
+                }, { once: true });
+                const logoDimEl = document.getElementById("logo-dim");
+                logoDimEl.classList.remove("active");
+                void logoDimEl.offsetWidth;
+                logoDimEl.classList.add("active");
+                logoDimEl.addEventListener("animationend",
+                    () => logoDimEl.classList.remove("active"), { once: true });
+            }
+
+            // ── Lightning ─────────────────────────────────────
+            function showLightning(intensity) {
+                const W = window.innerWidth;
+                const H = window.innerHeight;
+                const rect = logo.getBoundingClientRect();
+                lightSvg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+                lightG.innerHTML = "";
+
+                const portrait = window.innerHeight > window.innerWidth * 1.2;
+                const { x: ox, y: oy } = randomLogoEdgePoint(rect, portrait);
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                const baseA = Math.atan2(oy - cy, ox - cx);
+
+                const isLeft = ox < cx;
+                lightSvg.style.filter = isLeft
+                    ? "drop-shadow(0 0 4px rgba(255,255,255,1.0)) drop-shadow(0 0 14px rgba(90,225,255,1.0)) drop-shadow(0 0 35px rgba(40,190,255,1.0)) drop-shadow(0 0 70px rgba(20,120,255,0.80)) drop-shadow(0 0 120px rgba(10,60,220,0.45))"
+                    : "drop-shadow(0 0 4px rgba(255,255,255,1.0)) drop-shadow(0 0 14px rgba(255,40,195,1.0)) drop-shadow(0 0 35px rgba(240,20,170,1.0)) drop-shadow(0 0 70px rgba(200,10,150,0.80)) drop-shadow(0 0 120px rgba(160,5,120,0.45))";
+
+                const [r, g, b] = isLeft ? [90, 225, 255] : [255, 40, 195];
+                const count = intensity === "heavy"  ? 3 + Math.floor(Math.random() * 3)
+                            : intensity === "medium" ? 2 + Math.floor(Math.random() * 3)
+                            :                         1 + Math.floor(Math.random() * 2);
+
+                for (let i = 0; i < count; i++) {
+                    const spread = count > 1 ? 0.85 : 0.3;
+                    const angle = baseA + (Math.random() - 0.5) * spread;
+                    const dist = Math.max(W, H) * (0.35 + Math.random() * 0.45);
+                    const tx = ox + Math.cos(angle) * dist;
+                    const ty = oy + Math.sin(angle) * dist;
+                    const steps = 8 + Math.floor(Math.random() * 6);
+                    const pts = jaggedLine(ox, oy, tx, ty, steps, 0.2);
+                    const isMain = i === 0;
+                    makePoly(lightG, pts, isMain ? 45 : 25, `rgba(${r},${g},${b},0.045)`);
+                    makePoly(lightG, pts, isMain ? 10 : 5, `rgba(${r},${g},${b},0.18)`);
+                    makePoly(lightG, pts, isMain ? 0.9 : 0.55, "rgba(255,255,255,0.95)");
+
+                    if (Math.random() > 0.38) {
+                        const bt = 0.28 + Math.random() * 0.38;
+                        const bx = ox + (tx - ox) * bt;
+                        const by_ = oy + (ty - oy) * bt;
+                        const ba = angle + (Math.random() > 0.5 ? 1 : -1) * (0.45 + Math.random() * 0.55);
+                        const bd = dist * (0.18 + Math.random() * 0.22);
+                        const bpts = jaggedLine(bx, by_, bx + Math.cos(ba) * bd, by_ + Math.sin(ba) * bd, 4, 0.22);
+                        makePoly(lightG, bpts, 15, `rgba(${r},${g},${b},0.04)`);
+                        makePoly(lightG, bpts, 0.4, `rgba(${r},${g},${b},0.80)`);
+                    }
+                }
+
+                lightEl.classList.remove("strike");
+                void lightEl.offsetWidth;
+                lightEl.classList.add("strike");
+            }
+
+            // ── Shock helpers ──────────────────────────────────
+            function doBgFlash(level) {
+                bgFlashEl.classList.remove("burst-medium", "burst-heavy");
+                void bgFlashEl.offsetWidth;
+                bgFlashEl.classList.add("burst-" + level);
+            }
+
+            function doNeonSurge() {
+                logo.classList.remove("neon-surge");
+                void logo.offsetWidth;
+                logo.classList.add("neon-surge");
+                logo.addEventListener("animationend",
+                    () => logo.classList.remove("neon-surge"), { once: true });
+            }
+
+            function logoRestore(smooth) {
+                if (smooth) {
+                    logoWrap.style.transition = "transform 0.4s ease";
+                    logo.style.transition = "opacity 0.4s ease, filter 0.4s ease";
+                } else {
+                    logoWrap.style.transition = "";
+                    logo.style.transition = "";
+                }
+                logoWrap.style.transform = "";
+                logo.style.opacity = "";
+                logo.style.filter = "";
+            }
+
+            function clearLogoDim() {
+                logo.style.transition     = "";
+                logo.style.opacity        = "";
+                logo.style.filter         = "";
+                logoWrap.style.transition = "";
+            }
+
+            function doShake(level) {
+                logo.classList.remove("shock-light", "shock-medium", "shock-heavy");
+                void logo.offsetWidth;
+                logo.classList.add("shock-" + level);
+                logo.addEventListener("animationend", () => {
+                    logo.classList.remove("shock-light", "shock-medium", "shock-heavy");
+                }, { once: true });
+            }
+
+            function doPump(level) {
+                logoWrap.classList.remove("pump-heavy", "pump-medium");
+                void logoWrap.offsetWidth;
+                logoWrap.classList.add("pump-" + level);
+                logoWrap.addEventListener("animationend", () => {
+                    logoWrap.classList.remove("pump-heavy", "pump-medium");
+                    logoWrap.style.transform = "";
+                }, { once: true });
+            }
+
+            function doFlash() {
+                flashEl.classList.remove("pop");
+                void flashEl.offsetWidth;
+                flashEl.classList.add("pop");
+            }
+
+            function doVignette() {
+                vigEl.classList.remove("fading");
+                vigEl.classList.add("active");
+                setTimeout(() => {
+                    vigEl.classList.remove("active");
+                    vigEl.classList.add("fading");
+                }, 900);
+            }
+
+            // ── Guest + Impact helpers ────────────────────────
+            function dispatchGuest(entry) {
+                const g = entry.guest;
+                if (g.force === "none") return;
+                const cooldownOk = g.ignoreCooldown || (mi - lastGuestAt >= 2);
+                if (!cooldownOk) return;
+                let pick = g.force;
+                if (!pick) {
+                    if (Math.random() >= g.chance) return;
+                    pick = nextGuest;
+                    nextGuest = (nextGuest === 'ship') ? 'dog' : 'ship';
+                }
+                if (pick === 'ship') { showSpaceship(); } else { showBgImage(g.dogImage); }
+                lastGuestAt = mi;
+            }
+
+            function shouldShowImpact(entry) {
+                if (entry.forceImpact === true)  return true;
+                if (entry.forceImpact === false) return false;
+                if (entry.forceLevel) return true;
+                return Math.random() < entry.impactChance;
+            }
+
+            // ── triggerShock ──────────────────────────────────
+            function triggerShock(entry) {
+                const forceLevel = entry.forceLevel;
+                const isLeft = entry.side === "left"  ? true
+                             : entry.side === "right" ? false
+                             : Math.random() > 0.5;
+                const [cr, cg, cb] = isLeft ? [90, 225, 255] : [255, 40, 195];
+
+                let level;
+                if (forceLevel) {
+                    level = forceLevel;
+                    pressure = 0;
+                } else {
+                    const effectivePressure = pressure + entry.pressureBoost;
+                    const pb = Math.min(effectivePressure * 0.038, 0.38);
+                    const r = Math.random() - pb;
+                    pressure = 0;
+                    if      (r < 0.05) level = "none";
+                    else if (r < 0.13) level = "whisper";
+                    else if (r < 0.28) level = "light";
+                    else if (r < 0.66) level = "medium";
+                    else               level = "heavy";
+                }
+
+                // Log the resolved level
+                logFired(entry, level, isLeft);
+
+                if (level === "none") {
+                    logoRestore(true);
+                    if (Math.random() > 0.5) showLightning("light");
+                    if (entry.forceImpact === true) showImpactText("medium", cr, cg, cb);
+                    return;
+                }
+
+                if (level === "whisper") {
+                    logoRestore(false);
+                    doShake("light");
+                    showLightning("light");
+                    if (entry.forceImpact === true) showImpactText("medium", cr, cg, cb);
+                    return;
+                }
+
+                if (level === "light") {
+                    logoRestore(false);
+                    doShake("light");
+                    showLightning("light");
+                    if (Math.random() > 0.5) setTimeout(() => showLightning("light"), 80);
+                    if (entry.strikeBg === true) showStrikeBg();
+                    if (entry.forceImpact === true) showImpactText("medium", cr, cg, cb);
+                    return;
+                }
+
+                if (level === "medium") {
+                    const imp = shouldShowImpact(entry);
+                    clearLogoDim();
+                    doShake("medium");
+                    doPump("medium");
+                    doFlash();
+                    doBgFlash("medium");
+                    showLightning("medium");
+                    if (entry.strikeBg === true) showStrikeBg();
+                    if (imp) showImpactText("medium", cr, cg, cb);
+                    if (!imp || (entry.guest.force && entry.guest.force !== "none")) dispatchGuest(entry);
+                    return;
+                }
+
+                // HEAVY
+                const imp = shouldShowImpact(entry);
+                clearLogoDim();
+                doShake("heavy");
+                doPump("heavy");
+                doFlash();
+                doBgFlash("heavy");
+                doVignette();
+                showLightning("heavy");
+                if (entry.strikeBg !== false) showStrikeBg();
+                if (imp) showImpactText("heavy", cr, cg, cb);
+                if (!imp || (entry.guest.force && entry.guest.force !== "none")) dispatchGuest(entry);
+            }
+
+            /* ═══════════════════════════════════════════════════════
+               TEST BENCH — fire() wrapper
+               ═══════════════════════════════════════════════════════ */
+            let _lastFiredEntry = null;
+            const lastFiredEl = document.getElementById("last-fired");
+
+            function fire(opts) {
+                const raw = Object.assign({ word: "test" }, opts);
+                const entry = normalizeEntry(raw);
+                _lastFiredEntry = entry;
+                if (entry.pressureReset) pressure = 0;
+
+                // Pre-dim the logo so triggerShock's logoRestore() produces a
+                // visible snap-back (mirrors what tick() does in index.html)
+                logo.style.transition     = "";
+                logo.style.opacity        = "0.22";
+                logo.style.filter         = "brightness(0.4) saturate(0.5)";
+                logoWrap.style.transition = "";
+                logoWrap.style.transform  = "scale(0.82) rotate(-1deg)";
+
+                // Small delay so the dim state renders before the shock fires
+                setTimeout(() => triggerShock(entry), 70);
+            }
+
+            function logFired(entry, resolvedLevel, isLeft) {
+                const side = isLeft ? "left (blue)" : "right (pink)";
+                const parts = [`level: ${resolvedLevel}`, `side: ${side}`];
+                if (entry.forceImpact === true)  parts.push("forceImpact: true");
+                if (entry.forceImpact === false) parts.push("forceImpact: false");
+                if (entry.strikeBg === true)     parts.push("strikeBg: true");
+                if (entry.strikeBg === false)    parts.push("strikeBg: false");
+                if (entry.guest.force)           parts.push(`guest: ${entry.guest.force}`);
+                if (entry.pressureBoost)         parts.push(`pressureBoost: ${entry.pressureBoost}`);
+                lastFiredEl.textContent = parts.join(" | ");
+                lastFiredEl.style.opacity = "1";
+                setTimeout(() => { lastFiredEl.style.opacity = "0.35"; }, 1500);
+            }
+        </script>
+    </body>
+</html>
